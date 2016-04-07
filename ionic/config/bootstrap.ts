@@ -1,15 +1,8 @@
-import {provide, Provider} from 'angular2/core';
-import {ROUTER_PROVIDERS, LocationStrategy, HashLocationStrategy} from 'angular2/router';
-import {HTTP_PROVIDERS} from 'angular2/http';
-
 import {ClickBlock} from '../util/click-block';
 import {Config} from './config';
-import {Events} from '../util/events';
+import {EventAggregator} from 'aurelia-event-aggregator';
 import {FeatureDetect} from '../util/feature-detect';
-import {Form} from '../util/form';
-import {IonicApp} from '../components/app/app';
 import {Keyboard} from '../util/keyboard';
-import {MenuController} from '../components/menu/menu-controller';
 import {NavRegistry} from '../components/nav/nav-registry';
 import {Platform} from '../platform/platform';
 import {ready, closest} from '../util/dom';
@@ -20,7 +13,7 @@ import {Translate} from '../translation/translate';
 /**
  * @private
  */
-export function ionicProviders(args: any={}) {
+export function bootstrap(args: any={}) {
   let platform = new Platform();
   let navRegistry = new NavRegistry(args.pages);
 
@@ -38,7 +31,7 @@ export function ionicProviders(args: any={}) {
 
   let clickBlock = new ClickBlock();
 
-  let events = new Events();
+  let events = new EventAggregator();
   let featureDetect = new FeatureDetect();
 
   setupDom(window, document, config, platform, clickBlock, featureDetect);
@@ -48,21 +41,12 @@ export function ionicProviders(args: any={}) {
   platform.prepareReady(config);
 
   return [
-    IonicApp,
-    provide(ClickBlock, {useValue: clickBlock}),
-    provide(Config, {useValue: config}),
-    provide(Platform, {useValue: platform}),
-    provide(FeatureDetect, {useValue: featureDetect}),
-    provide(Events, {useValue: events}),
-    provide(NavRegistry, {useValue: navRegistry}),
-    TapClick,
-    Form,
-    Keyboard,
-    MenuController,
-    Translate,
-    ROUTER_PROVIDERS,
-    provide(LocationStrategy, {useClass: HashLocationStrategy}),
-    HTTP_PROVIDERS,
+    clickBlock,
+    platform,
+    clickBlock,
+    navRegistry,
+    events,
+    config
   ];
 }
 

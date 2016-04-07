@@ -1,4 +1,4 @@
-import {Injectable, Pipe, PipeTransform} from 'angular2/core';
+import {autoinject} from 'aurelia-framework';
 
 import {Translate} from './translate';
 
@@ -8,20 +8,21 @@ import {Translate} from './translate';
  *
  * @usage
  * Translate using the current language or language set through Translate.setLanguage
- * {{ 'Please enter your location' | translate }}
+ * ${ 'Please enter your location' | translate }
  *
  * Translate using a specific language
- * {{ 'Please enter your location' | translate:"de" }}
+ * ${ 'Please enter your location' | translate:"de" }
  */
-@Pipe({name: 'translate'})
-@Injectable()
-export class TranslatePipe implements PipeTransform {
-  private translate :any = {};
+
+@autoinject
+export class TranslateValueConverter {
+  private translate: any = {};
 
   constructor(translate: Translate) {
     this.translate = translate;
   }
-  transform(value, args) {
+
+  toView(value, ...args) {
     let lang;
     if(args.length > 0) {
       lang = args[0];
@@ -29,5 +30,7 @@ export class TranslatePipe implements PipeTransform {
     return this.translate.translate(value, lang);
   }
 
-  supports(obj) { return true; }
+  supports(obj) {
+    return true;
+  }
 }

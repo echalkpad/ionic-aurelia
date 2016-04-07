@@ -1,10 +1,6 @@
-import {Injectable} from 'angular2/core';
-
-
 /**
  * @private
  */
-@Injectable()
 export class Form {
   private _blur: HTMLElement;
   private _focused = null;

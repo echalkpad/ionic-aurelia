@@ -4,9 +4,7 @@ jasmine.DEFAULT_TIMEOUT_INTERVAL = 50;
 // we will call `__karma__.start()` later, once all the specs are loaded.
 __karma__.loaded = function() {};
 
-System.import('angular2/src/platform/browser/browser_adapter').then(function(browser_adapter) {
-  browser_adapter.BrowserDomAdapter.makeCurrent();
-}).then(function() {
+System.import('aurelia-polyfills').then(function() {
   return Promise.all(
     Object.keys(window.__karma__.files) // All files served by Karma.
     .filter(onlySpecFiles)
@@ -19,14 +17,13 @@ System.import('angular2/src/platform/browser/browser_adapter').then(function(bro
           console.warn('WARNING: Module ' + path + ' does not implement a run() method. No tests run.');
         }
       });
-    }))
-})
-.then(function() {
-  __karma__.start();
-}, function(error) {
-  console.error(error.stack || error);
-  __karma__.start();
-});
+    }));
+  }).then(function() {
+    __karma__.start();
+  }, function(error) {
+    console.error(error.stack || error);
+    __karma__.start();
+  });
 
 function onlySpecFiles(path) {
   return /\.spec\.js$/.test(path);

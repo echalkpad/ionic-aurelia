@@ -1,15 +1,13 @@
-import {Type} from 'angular2/core';
-
 /**
  * @private
  * Map of possible pages that can be navigated to using an Ionic NavController
  */
 export class NavRegistry {
-  private _pages: Map<string, Type>;
+  private _pages: Map<string, Function>;
 
-  constructor(pages: Type[] = []) {
+  constructor(pages: Function[] = []) {
     var pagePairs = pages.map(page => [page['name'], page]);
-    this._pages = new Map<string, Type>();
+    this._pages = new Map<string, Function>();
     for (var i = 0; i < pagePairs.length; i++) {
       var pair = pagePairs[i];
       this._pages.set(pair[0], pair[1]);

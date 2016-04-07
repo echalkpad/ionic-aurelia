@@ -1,4 +1,4 @@
-import {Config, Platform, ionicProviders} from '../../../ionic';
+import {Config, Platform, bootstrap} from '../../../ionic';
 
 export function run() {
 
@@ -68,31 +68,29 @@ export function run() {
     expect(config.get('activator')).toEqual('none');
   });
 
-  it('should create a new Config instace when no confg passed in ionicProviders', () => {
-    let providers = ionicProviders();
-
-    let config = providers.find(provider => provider.useValue instanceof Config).useValue;
+  it('should create a new Config instace when no confg passed in `bootstrap`', () => {
+    let config = bootstrap().find(provider => provider instanceof Config);
 
     expect(config.get('mode')).toEqual('ios');
   });
 
-  it('should used passed in Config instance in ionicProviders', () => {
+  it('should used passed in Config instance in `bootstrap`', () => {
     let userConfig =  new Config({
       mode: 'configInstance'
     })
-    let providers = ionicProviders({config:userConfig});
+    let providers = bootstrap({config:userConfig});
 
-    let config = providers.find(provider => provider.useValue instanceof Config).useValue;
+    let config = providers.find(provider => provider instanceof Config);
 
     expect(config.get('mode')).toEqual('configInstance');
   });
 
-  it('should create new Config instance from config object in ionicProviders', () => {
-    let providers = ionicProviders({config: {
+  it('should create new Config instance from config object in `bootstrap`', () => {
+    let providers = bootstrap({config: {
       mode: 'configObj'
     }});
 
-    let config = providers.find(provider => provider.useValue instanceof Config).useValue;
+    let config = providers.find(provider => provider instanceof Config);
 
     expect(config.get('mode')).toEqual('configObj');
   });

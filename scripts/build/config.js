@@ -12,12 +12,13 @@ module.exports = {
   },
 
   scripts: [
-    'node_modules/systemjs/node_modules/es6-module-loader/dist/es6-module-loader.js',
-    'node_modules/systemjs/dist/system.js',
-    'node_modules/angular2/bundles/angular2.dev.js',
-    'node_modules/angular2/bundles/router.dev.js',
-    'node_modules/angular2/bundles/http.dev.js',
-    'node_modules/es6-shim/es6-shim.min.js',
+    'node_modules/aurelia-polyfills/dist/system/aurelia-polyfills.js',
+    'node_modules/aurelia-framework/dist/system/aurelia-framework.js',
+    'node_modules/aurelia-event-aggregator/dist/system/aurelia-event-aggregator.js',
+    'node_modules/aurelia-templating-binding/dist/system/aurelia-templating-binding.js',
+    'node_modules/aurelia-templating-resources/dist/system/aurelia-templating-resources.js',
+    'node_modules/aurelia-logging-console/dist/system/aurelia-logging-console.js',
+    'node_modules/aurelia-pal-browser/dist/system/aurelia-pal-browser.js',
     'dist/js/ionic.js'
   ],
 

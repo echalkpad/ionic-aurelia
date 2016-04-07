@@ -1,5 +1,4 @@
-import {Injectable, NgZone} from 'angular2/core';
-
+import {autoinject} from 'aurelia-framework';
 import {Config} from '../config/config';
 import {Form} from './form';
 import {hasFocusedTextInput, raf, rafFrames} from './dom';
@@ -20,13 +19,11 @@ import {hasFocusedTextInput, raf, rafFrames} from './dom';
  * ```
  */
 
-@Injectable()
+@autoinject
 export class Keyboard {
 
-  constructor(config: Config, private _form: Form, private _zone: NgZone) {
-    _zone.runOutsideAngular(() => {
-      this.focusOutline(config.get('focusOutline'), document);
-    });
+  constructor(config: Config, private _form: Form) {
+    this.focusOutline(config.get('focusOutline'), document);
   }
 
 
@@ -82,26 +79,21 @@ export class Keyboard {
       promise = new Promise(resolve => { callback = resolve; });
     }
 
-    self._zone.runOutsideAngular(() => {
+    function checkKeyboard() {
+      console.debug('keyboard isOpen', self.isOpen(), checks);
+      if (!self.isOpen() || checks > 100) {
+        rafFrames(30, () => {
+          console.debug('keyboard closed');
+          callback();
+        });
 
-      function checkKeyboard() {
-        console.debug('keyboard isOpen', self.isOpen(), checks);
-        if (!self.isOpen() || checks > 100) {
-          rafFrames(30, () => {
-            self._zone.run(() => {
-              console.debug('keyboard closed');
-              callback();
-            });
-          });
-
-        } else {
-          setTimeout(checkKeyboard, pollingInternval);
-        }
-        checks++;
+      } else {
+        setTimeout(checkKeyboard, pollingInternval);
       }
+      checks++;
+    }
 
-      setTimeout(checkKeyboard, pollingInternval);
-    });
+    setTimeout(checkKeyboard, pollingInternval);
 
     return promise;
   }
@@ -169,15 +161,13 @@ export class Keyboard {
     function enableKeyInput() {
       cssClass();
 
-      self._zone.runOutsideAngular(() => {
-        document.removeEventListener('mousedown', pointerDown);
-        document.removeEventListener('touchstart', pointerDown);
+      document.removeEventListener('mousedown', pointerDown);
+      document.removeEventListener('touchstart', pointerDown);
 
-        if (isKeyInputEnabled) {
-          document.addEventListener('mousedown', pointerDown);
-          document.addEventListener('touchstart', pointerDown);
-        }
-      });
+      if (isKeyInputEnabled) {
+        document.addEventListener('mousedown', pointerDown);
+        document.addEventListener('touchstart', pointerDown);
+      }
     }
 
     document.addEventListener('keydown', keyDown);

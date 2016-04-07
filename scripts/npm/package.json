@@ -1,7 +1,7 @@
 {
-  "name": "ionic-angular",
+  "name": "ionic-aurelia",
   "version": "<%= ionicVersion %>",
-  "description": "An advanced HTML5 mobile app framework built on Angular2",
+  "description": "An advanced HTML5 mobile app framework built on Aurelia",
   "license": "MIT",
   "keywords": ["ionic", "framework", "mobile", "app", "hybrid", "webapp", "cordova"],
   "repository": {
@@ -16,6 +16,6 @@
     "q": "1.4.1"
   },
   "peerDependencies": {
-    "angular2": "^<%= angularVersion %>"
+    "aurelia-framework": "^<%= aureliaVersion %>"
   }
 }

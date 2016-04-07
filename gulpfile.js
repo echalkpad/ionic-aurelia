@@ -60,7 +60,7 @@ var babelOptions = {
   modules: 'system',
   moduleIds: true,
   getModuleId: function(name) {
-    return 'ionic-angular/' + name;
+    return 'ionic-aurelia/' + name;
   }
 }
 
@@ -241,12 +241,15 @@ function tsCompile(options, cacheName){
   return gulp.src([
       'typings/main.d.ts',
       'ionic/**/*.ts',
+      '!ionic/decorators/**/*.ts',
+      // '!ionic/components/**/*.ts',
       '!ionic/**/*.d.ts',
       '!ionic/components/*/test/**/*',
       '!ionic/util/test/*',
       '!ionic/config/test/*',
       '!ionic/platform/test/*',
-      '!ionic/**/*.spec.ts'
+      '!ionic/**/*.spec.ts',
+      'ionic/components/nav/nav-registry.ts'
     ])
     .pipe(cache(cacheName, { optimizeMemory: true }))
     .pipe(tsc(options, undefined, tscReporter))
@@ -333,15 +336,15 @@ gulp.task('copy.scss', function() {
 gulp.task('copy.libs', function() {
   var merge = require('merge2');
   var extModules = gulp.src([
-      'node_modules/es6-shim/es6-shim.min.js',
       'node_modules/systemjs/node_modules/es6-module-loader/dist/es6-module-loader.src.js', //npm2
       'node_modules/es6-module-loader/dist/es6-module-loader.src.js', //npm3
       'node_modules/systemjs/dist/system.src.js',
-      'node_modules/angular2/bundles/angular2-polyfills.js',
-      'node_modules/angular2/bundles/angular2.dev.js',
-      'node_modules/angular2/bundles/router.dev.js',
-      'node_modules/angular2/bundles/http.dev.js',
-      'node_modules/rxjs/bundles/Rx.js'
+      'node_modules/aurelia-polyfills/dist/commonjs/aurelia-polyfills.js',
+      'node_modules/aurelia-framework/dist/commonjs/aurelia-framework.js',
+      'node_modules/aurelia-event-aggregator/dist/commonjs/aurelia-event-aggregator.js',
+      'node_modules/aurelia-templating-binding/dist/commonjs/aurelia-templating-binding.js',
+      'node_modules/aurelia-templating-resources/dist/commonjs/aurelia-templating-resources.js',
+      'node_modules/aurelia-logging-console/dist/commonjs/aurelia-logging-console.js'
     ])
     .pipe(gulp.dest('dist/js'));
 
@@ -470,7 +473,11 @@ gulp.task('e2e.build', function() {
  * Builds Ionic unit tests to dist/tests.
  */
 gulp.task('tests', function() {
-  return gulp.src('ionic/**/test/**/*.spec.ts')
+  return gulp.src([
+    'ionic/**/test/**/*.spec.ts',
+    '!ionic/components/**/test/**/*.spec.ts',
+    '!ionic/components/*/test/*/**/*.ts'
+    ])
     .pipe(cache('tests'))
     .pipe(tsc(getTscOptions(), undefined, tscReporter))
     .pipe(rename(function(file) {
@@ -783,7 +790,7 @@ gulp.task('package', function(done){
   var templateVars = {};
   var packageJSON = require('./package.json');
   templateVars.ionicVersion = packageJSON.version;
-  templateVars.angularVersion = packageJSON.dependencies.angular2;
+  templateVars.aureliaVersion = packageJSON.dependencies['aurelia-framework'];
   var packageTemplate = _.template(fs.readFileSync('scripts/npm/package.json'));
   fs.writeFileSync(distDir + '/package.json', packageTemplate(templateVars));
   done();
