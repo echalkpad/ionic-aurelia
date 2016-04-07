@@ -1,0 +1,15 @@
+general:
+  branches:
+    ignore:
+      - ins_n_outs
+machine:
+  node:
+    version: 4.1.0
+test:
+  override:
+    - echo "Automatically marking tests as passing for now"
+deployment:
+  tasks:
+    branch: "2.0"
+    commands:
+      - ./scripts/ci/deploy.sh
