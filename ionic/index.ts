@@ -25,7 +25,7 @@ import './transitions/transition-ios'
 import './transitions/transition-md'
 import './transitions/transition-wp'
 
-import {bootstrap} from './config/bootstrap'
+import {bootstrap as createProviders} from './config/bootstrap'
 import {Config} from './config/config'
 
 export function configure(pluginConfig, callback) {
@@ -35,7 +35,7 @@ export function configure(pluginConfig, callback) {
     callback(config);
   }
 
-  let providers = bootstrap({ config: config });
+  let providers = createProviders({ config: config });
 
   providers.forEach(function(provider) {
     pluginConfig.container.registerInstance(provider.constructor, provider);

@@ -1,10 +1,12 @@
-import {App} from 'ionic-angular';
+import {bootstrap} from 'aurelia-bootstrapper';
 
-
-@App({
-  templateUrl: 'main.html'
-})
 class E2EApp {
+  public homeIcon: string;
+  public isActive: boolean;
+  public iconIndex: number;
+  public icons: string[];
+  public btnIcon: string;
+
   constructor() {
     this.homeIcon = 'home';
     this.isActive = false;

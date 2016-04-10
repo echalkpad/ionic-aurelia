@@ -1,5 +1,4 @@
-import {Directive, ElementRef, Renderer, Input} from 'angular2/core';
-
+import {customElement, bindable, noView} from 'aurelia-framework';
 import {Config} from '../../config/config';
 
 
@@ -34,32 +33,46 @@ import {Config} from '../../config/config';
  * @see {@link /docs/v2/components#icons Icon Component Docs}
  *
  */
-@Directive({
-  selector: 'ion-icon,icon',
-  host: {
-    'role': 'img'
-  }
-})
+@customElement('ion-icon')
+@customElement('icon')
+@noView
 export class Icon {
-  private _isActive: any;
+  private _isActive: boolean = true;
   private _name: string = '';
   private _ios: string = '';
   private _md: string = '';
   private _css: string = '';
 
   /**
+   * @input {string} Icon to use. Will load the appropriate icon for each mode
+   */
+  @bindable name: string;
+
+  /**
+   * @input {string} Explicitly set the icon to use on iOS
+   */
+  @bindable ios: string;
+
+  /**
+   * @input {string} Explicitly set the icon to use on MD
+   */
+  @bindable md: string;
+
+  /**
+   * @input {bool} Whether or not the icon has an "active" appearance. On iOS an active icon is filled in or full appearance, and an inactive icon on iOS will use an outlined version of the icon same icon. Material Design icons do not change appearance depending if they're active or not. The `isActive` property is largely used by the tabbar.
+   */
+  @bindable isActive: boolean = true;
+
+  /**
    * @private
    */
   mode: string;
 
-  constructor(
-    config: Config,
-    private _elementRef: ElementRef,
-    private _renderer: Renderer
-  ) {
+  constructor(config: Config, private _element: Element) {
     this.mode = config.get('iconMode');
+    _element.setAttribute('role', 'img');
 
-    if (_elementRef.nativeElement.tagName === 'ICON') {
+    if (_element.tagName === 'ICON') {
       // deprecated warning
       console.warn('<icon> has been renamed to <ion-icon>');
       console.warn('<ion-icon> requires the "name" attribute w/ a value');
@@ -67,24 +80,13 @@ export class Icon {
     }
   }
 
-  /**
-   * @private
-   */
-  ngOnDestroy() {
+  detached() {
     if (this._css) {
-      this._renderer.setElementClass(this._elementRef.nativeElement, this._css, false);
+      this._element.classList.remove(this._css);
     }
   }
 
-  /**
-   * @input {string} Icon to use. Will load the appropriate icon for each mode
-   */
-  @Input()
-  get name(): string {
-    return this._name;
-  }
-
-  set name(val: string) {
+  nameChanged(val: string) {
     if (!(/^md-|^ios-|^logo-/.test(val))) {
       // this does not have one of the defaults
       // so lets auto add in the mode prefix for them
@@ -94,43 +96,18 @@ export class Icon {
     this.update();
   }
 
-  /**
-   * @input {string} Explicitly set the icon to use on iOS
-   */
-  @Input()
-  get ios(): string {
-    return this._ios;
-  }
-
-  set ios(val: string) {
+  iosChanged(val: string) {
     this._ios = val;
     this.update();
   }
 
-  /**
-   * @input {string} Explicitly set the icon to use on MD
-   */
-  @Input()
-  get md(): string {
-    return this._md;
-  }
-
-  set md(val: string) {
+  mdChanged(val: string) {
     this._md = val;
     this.update();
   }
 
-
-  /**
-   * @input {bool} Whether or not the icon has an "active" appearance. On iOS an active icon is filled in or full appearance, and an inactive icon on iOS will use an outlined version of the icon same icon. Material Design icons do not change appearance depending if they're active or not. The `isActive` property is largely used by the tabbar.
-   */
-  @Input()
-  get isActive(): boolean {
-    return (this._isActive === undefined || this._isActive === true || this._isActive === 'true');
-  }
-
-  set isActive(val: boolean) {
-    this._isActive = val;
+  isActiveChanged(val: boolean | string) {
+    this._isActive = val === 'true' || Boolean(val);
     this.update();
   }
 
@@ -150,28 +127,19 @@ export class Icon {
       css += this._name;
     }
 
-    if (this.mode == 'ios' && !this.isActive) {
+    if (this.mode == 'ios' && !this._isActive) {
       css += '-outline';
     }
 
     if (this._css !== css) {
       if (this._css) {
-        this._renderer.setElementClass(this._elementRef.nativeElement, this._css, false);
+        this._element.classList.remove(this._css);
       }
       this._css = css;
-      this._renderer.setElementClass(this._elementRef.nativeElement, css, true);
+      this._element.classList.add(css);
 
-      this._renderer.setElementAttribute(this._elementRef.nativeElement, 'aria-label',
+      this._element.setAttribute('aria-label',
           css.replace('ion-', '').replace('ios-', '').replace('md-', '').replace('-', ' '));
     }
   }
-
-  /**
-   * @private
-   * @param {string} add class name
-   */
-  addClass(className: string) {
-    this._renderer.setElementClass(this._elementRef.nativeElement, className, true);
-  }
-
 }

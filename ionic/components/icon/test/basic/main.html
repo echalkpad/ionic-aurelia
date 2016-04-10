@@ -1,4 +1,4 @@
-
+<template>
 <ion-toolbar>
   <ion-title>Icons</ion-title>
 </ion-toolbar>
@@ -15,9 +15,9 @@
     </ion-item>
 
     <ion-item>
-      <ion-icon [name]="homeIcon" item-left></ion-icon>
+      <ion-icon name.bind="homeIcon" item-left></ion-icon>
       <code>
-        [name]="homeIcon"
+        name.bind="homeIcon"
       </code>
     </ion-item>
 
@@ -29,9 +29,9 @@
     </ion-item>
 
     <ion-item>
-      <ion-icon name="home" [isActive]="isActive" item-left></ion-icon>
+      <ion-icon name="home" isActive.bind="isActive" item-left></ion-icon>
       <code>
-        name="home" [isActive]="isActive"
+        name="home" isActive.bind="isActive"
       </code>
     </ion-item>
 
@@ -72,7 +72,7 @@
 
     <ion-item detail-push>
       <code>
-        ion-item w/ [detail-push] attr. text text text text text text
+        ion-item w/ detail-push.bind attr. text text text text text text
       </code>
     </ion-item>
 
@@ -80,7 +80,7 @@
 
   <p>
     <button (click)="updateIcon()">
-      <ion-icon [name]="btnIcon"></ion-icon>
+      <ion-icon name.bind="btnIcon"></ion-icon>
       Update icon
     </button>
   </p>
@@ -93,3 +93,4 @@
     font-size: 0.8em;
   }
 </style>
+</template>
