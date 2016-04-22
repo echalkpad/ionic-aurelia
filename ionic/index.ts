@@ -31,11 +31,20 @@ import {Config} from './config/config'
 export function configure(pluginConfig, callback) {
   let config = new Config();
 
-  if (callback) {
+  if (typeof callback === 'function') {
     callback(config);
   }
 
   let providers = createProviders({ config: config });
+
+  pluginConfig.globalResources([
+    'ionic-aurelia/components/icon/icon',
+    'ionic-aurelia/components/content/content',
+    'ionic-aurelia/components/button/button',
+    'ionic-aurelia/components/item/item',
+    'ionic-aurelia/components/list/list',
+    'ionic-aurelia/components/label/label',
+  ]);
 
   providers.forEach(function(provider) {
     pluginConfig.container.registerInstance(provider.constructor, provider);

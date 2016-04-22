@@ -45,6 +45,30 @@ function getTscOptions(name) {
   return opts;
 }
 
+function getBabelOptions() {
+  return {
+    moduleIds: true,
+    moduleRoot: '',
+    filename: '',
+    filenameRelative: '',
+    sourceMap: true,
+    sourceRoot: '',
+    comments: false,
+    compact: false,
+    code: true,
+    presets: [ 'es2015-loose', 'stage-1'],
+    plugins: [
+      'syntax-flow',
+      'transform-decorators-legacy',
+      'transform-flow-strip-types',
+      'transform-es2015-modules-systemjs'
+    ],
+    getModuleId: function(name) {
+      return name[0] === '/' ? name.slice(1) : name;
+    }
+  };
+}
+
 var tscReporter = {
   error: function (error) {
     // TODO
@@ -57,8 +81,12 @@ var tscReporter = {
 // See: https://github.com/Microsoft/TypeScript/issues/4801
 // and https://github.com/ivogabe/gulp-typescript/issues/211
 var babelOptions = {
-  modules: 'system',
   moduleIds: true,
+  plugins: [
+    'syntax-flow',
+    'transform-decorators-legacy',
+    'transform-es2015-modules-systemjs'
+  ],
   getModuleId: function(name) {
     return 'ionic-aurelia/' + name;
   }
@@ -330,21 +358,49 @@ gulp.task('copy.scss', function() {
     .pipe(gulp.dest('dist'));
 });
 
+gulp.task('bundle.aurelia', function() {
+  var concat = require('gulp-concat');
+  var babel = require('gulp-babel');
+
+  return gulp.src([
+      'node_modules/aurelia-polyfills/dist/aurelia-polyfills.js',
+      'node_modules/aurelia-bootstrapper/dist/aurelia-bootstrapper.js',
+      'node_modules/aurelia-event-aggregator/dist/aurelia-event-aggregator.js',
+      // 'node_modules/aurelia-fetch-client/dist/aurelia-fetch-client.js',
+      'node_modules/aurelia-framework/dist/aurelia-framework.js',
+      'node_modules/aurelia-metadata/dist/aurelia-metadata.js',
+      'node_modules/aurelia-history/dist/aurelia-history.js',
+      'node_modules/aurelia-history-browser/dist/aurelia-history-browser.js',
+      'node_modules/aurelia-dependency-injection/dist/aurelia-dependency-injection.js',
+      'node_modules/aurelia-path/dist/aurelia-path.js',
+      'node_modules/aurelia-loader/dist/aurelia-loader.js',
+      'node_modules/aurelia-loader-default/dist/aurelia-loader-default.js',
+      'node_modules/aurelia-logging/dist/aurelia-logging.js',
+      'node_modules/aurelia-logging-console/dist/aurelia-logging-console.js',
+      'node_modules/aurelia-pal/dist/aurelia-pal.js',
+      'node_modules/aurelia-pal-browser/dist/aurelia-pal-browser.js',
+      'node_modules/aurelia-route-recognizer/dist/aurelia-route-recognizer.js',
+      'node_modules/aurelia-router/dist/aurelia-router.js',
+      'node_modules/aurelia-task-queue/dist/aurelia-task-queue.js',
+      'node_modules/aurelia-binding/dist/aurelia-binding.js',
+      'node_modules/aurelia-templating/dist/aurelia-templating.js',
+      'node_modules/aurelia-templating-binding/dist/aurelia-templating-binding.js',
+      'node_modules/aurelia-templating-resources/dist/aurelia-templating-resources.js',
+      'node_modules/aurelia-templating-router/dist/aurelia-templating-router.js'
+    ])
+    .pipe(babel(getBabelOptions()))
+    .pipe(concat('aurelia-framework.js'))
+    .pipe(gulp.dest('dist/js'));
+});
+
 /**
  * Copies miscellaneous scripts to dist.
  */
-gulp.task('copy.libs', function() {
+gulp.task('copy.libs', ['bundle.aurelia'], function() {
   var merge = require('merge2');
   var extModules = gulp.src([
-      'node_modules/systemjs/node_modules/es6-module-loader/dist/es6-module-loader.src.js', //npm2
       'node_modules/es6-module-loader/dist/es6-module-loader.src.js', //npm3
-      'node_modules/systemjs/dist/system.src.js',
-      'node_modules/aurelia-polyfills/dist/commonjs/aurelia-polyfills.js',
-      'node_modules/aurelia-framework/dist/commonjs/aurelia-framework.js',
-      'node_modules/aurelia-event-aggregator/dist/commonjs/aurelia-event-aggregator.js',
-      'node_modules/aurelia-templating-binding/dist/commonjs/aurelia-templating-binding.js',
-      'node_modules/aurelia-templating-resources/dist/commonjs/aurelia-templating-resources.js',
-      'node_modules/aurelia-logging-console/dist/commonjs/aurelia-logging-console.js'
+      'node_modules/systemjs/dist/system.src.js'
     ])
     .pipe(gulp.dest('dist/js'));
 
@@ -387,16 +443,16 @@ gulp.task('e2e', ['e2e.build', 'bundle.system', 'copy.libs', 'sass', 'fonts']);
 gulp.task('e2e.build', function() {
   var gulpif = require('gulp-if');
   var merge = require('merge2');
-  var _ = require('lodash');
+  var template = require('lodash.template');
   var fs = require('fs');
   var VinylFile = require('vinyl');
 
-  var indexTemplate = _.template(
+  var indexTemplate = template(
    fs.readFileSync('scripts/e2e/e2e.template.html')
   )({
     buildConfig: buildConfig
   });
-  var testTemplate = _.template(fs.readFileSync('scripts/e2e/e2e.template.js'));
+  var testTemplate = template(fs.readFileSync('scripts/e2e/e2e.template.js'));
 
   var platforms = [
     'android',
@@ -406,7 +462,7 @@ gulp.task('e2e.build', function() {
 
   // Get each test folder with gulp.src
   var tsResult = gulp.src([
-      'ionic/components/*/test/*/**/*.ts',
+      'ionic/components/{app,button,content,icon,item,label,list}/test/*/**/*.ts',
       '!ionic/components/*/test/*/**/*.spec.ts'
     ])
     .pipe(cache('e2e.ts'))
@@ -418,7 +474,7 @@ gulp.task('e2e.build', function() {
     .pipe(gulpif(/e2e.js$/, createPlatformTests()))
 
   var testFiles = gulp.src([
-      'ionic/components/*/test/*/**/*',
+      'ionic/components/{app,button,content,icon,item,label,list}/test/*/**/*',
       '!ionic/components/*/test/*/**/*.ts'
     ])
     .pipe(cache('e2e.files'))
@@ -585,12 +641,12 @@ gulp.task('bundle.demos', ['build.demos', 'transpile', 'copy.libs', 'sass', 'fon
 gulp.task('build.demos', function() {
   var gulpif = require('gulp-if');
   var merge = require('merge2');
-  var _ = require('lodash');
+  var template = require('lodash.template');
   var fs = require('fs');
   var VinylFile = require('vinyl');
 
   var indexTemplateName = LOCAL_DEMOS ? 'index.template.dev.html' : 'index.template.html';
-  var baseIndexTemplate = _.template(fs.readFileSync('scripts/demos/' + indexTemplateName))();
+  var baseIndexTemplate = template(fs.readFileSync('scripts/demos/' + indexTemplateName))();
 
   console.log(flags);
   if (flags.production) {
@@ -625,7 +681,7 @@ gulp.task('build.demos', function() {
       var indexTemplate = baseIndexTemplate;
       var customTemplateFp = file.path.split('/').slice(0, -1).join('/') + '/index.html';
       if (fs.existsSync(customTemplateFp)) {
-        indexTemplate = _.template(fs.readFileSync(customTemplateFp))();
+        indexTemplate = template(fs.readFileSync(customTemplateFp))();
       }
       this.push(new VinylFile({
         base: file.base,
@@ -776,7 +832,7 @@ gulp.task('prepare', function(){
  * Copies npm package and tooling files to dist.
  */
 gulp.task('package', function(done){
-  var _ = require('lodash');
+  var template = require('lodash.template');
   var fs = require('fs');
   var distDir = 'dist';
 
@@ -791,7 +847,7 @@ gulp.task('package', function(done){
   var packageJSON = require('./package.json');
   templateVars.ionicVersion = packageJSON.version;
   templateVars.aureliaVersion = packageJSON.dependencies['aurelia-framework'];
-  var packageTemplate = _.template(fs.readFileSync('scripts/npm/package.json'));
+  var packageTemplate = template(fs.readFileSync('scripts/npm/package.json'));
   fs.writeFileSync(distDir + '/package.json', packageTemplate(templateVars));
   done();
 });

@@ -1,4 +1,4 @@
-import {customElement, bindable, noView} from 'aurelia-framework';
+import {customElement, bindable, noView, inject} from 'aurelia-framework';
 import {Config} from '../../config/config';
 
 
@@ -36,6 +36,7 @@ import {Config} from '../../config/config';
 @customElement('ion-icon')
 @customElement('icon')
 @noView
+@inject(Config, Element)
 export class Icon {
   private _isActive: boolean = true;
   private _name: string = '';

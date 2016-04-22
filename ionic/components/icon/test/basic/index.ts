@@ -1,6 +1,7 @@
-import {bootstrap} from 'aurelia-bootstrapper';
+import {useView} from 'aurelia-framework';
 
-class E2EApp {
+@useView('./main.html')
+export class E2EApp {
   public homeIcon: string;
   public isActive: boolean;
   public iconIndex: number;

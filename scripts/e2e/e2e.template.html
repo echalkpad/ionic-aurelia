@@ -6,9 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
   <!-- using relative paths in order for snapshot e2e tests to also work -->
-  <link id="iosLink" ios-href="../../../bundles/ionic.ios.css" rel="stylesheet">
-  <link id="mdLink" md-href="../../../bundles/ionic.md.css" rel="stylesheet">
-  <link id="wpLink" wp-href="../../../bundles/ionic.wp.css" rel="stylesheet">
+  <link id="iosLink" ios-href="/dist/bundles/ionic.ios.css" rel="stylesheet">
+  <link id="mdLink" md-href="/dist/bundles/ionic.md.css" rel="stylesheet">
+  <link id="wpLink" wp-href="/dist/bundles/ionic.wp.css" rel="stylesheet">
 
   <script>
     if (location.href.indexOf('snapshot=true') > -1) {
@@ -36,27 +36,25 @@
     }
   </script>
 
-  <script src="../../../js/es6-shim.min.js"></script>
-  <script src="../../../js/es6-module-loader.src.js"></script>
-  <script src="../../../js/system.src.js"></script>
+  <!-- <script type="text/javascript" src="/dist/demos/scrollbar-fix.js"></script> -->
+  <script src="/dist/js/es6-module-loader.src.js"></script>
+  <script src="/dist/js/system.src.js"></script>
   <script>
     System.config({
+      defaultJSExtensions: true,
       map: {
-        'angular2': '/angular2'
+        'aurelia-framework': '/dist/js/aurelia-framework.js',
+        'ionic-aurelia': '/dist/bundles/ionic.system.js'
       },
       packages: {
-        'ionic-angular': {
+        'ionic-aurelia': {
           main: 'index'
         }
       }
     });
   </script>
-  <script src="../../../js/angular2-polyfills.js"></script>
-  <script src="../../../js/angular2.dev.js"></script>
-  <script src="../../../js/router.dev.js"></script>
-  <script src="../../../js/http.dev.js"></script>
-  <script src="../../../bundles/ionic.system.js"></script>
-  <script src="../../../js/Rx.js"></script>
+  <script src="/dist/js/aurelia-framework.js"></script>
+  <script src="/dist/bundles/ionic.system.js"></script>
 
   <style>
     .snapshot body {
@@ -116,8 +114,18 @@
       document.body.classList.remove('rtl');
     }
 
+    System.import('aurelia-bootstrapper').then(function(module) {
+      return module.bootstrap(function(aurelia) {
+        aurelia.use
+          .standardConfiguration()
+          .developmentLogging()
+          .plugin('ionic-aurelia');
 
-    System.import('index.js').then(function(m) {}, console.error.bind(console));
+        return aurelia.start().then(function() {
+          return aurelia.setRoot('./index', document.body);
+        });
+      });
+    });
   </script>
 
 </body>

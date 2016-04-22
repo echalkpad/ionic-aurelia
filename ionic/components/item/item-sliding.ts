@@ -1,4 +1,4 @@
-import {Component, ElementRef, Optional} from 'angular2/core';
+import {customElement, inlineView, inject, Optional} from 'aurelia-framework';
 
 import {List} from '../list/list';
 
@@ -23,21 +23,23 @@ import {List} from '../list/list';
  *   </ion-item-sliding>
  * </ion-list>
  * ```
- * @demo /docs/v2/demos/item-sliding/  
+ * @demo /docs/v2/demos/item-sliding/
  * @see {@link /docs/v2/components#lists List Component Docs}
  * @see {@link ../../list/List List API Docs}
  */
-@Component({
-  selector: 'ion-item-sliding',
-  template:
+@customElement('ion-item-sliding')
+@inlineView(
+  '<template>' +
     '<ng-content select="ion-item,[ion-item]"></ng-content>' +
-    '<ng-content select="ion-item-options"></ng-content>'
-})
+    '<ng-content select="ion-item-options"></ng-content>' +
+  '</template>'
+)
+@inject(Optional.of(List), Element)
 export class ItemSliding {
 
-  constructor(@Optional() private _list: List, elementRef: ElementRef) {
+  constructor(private _list: List, element: Element) {
     _list.enableSlidingItems(true);
-    elementRef.nativeElement.$ionSlide = ++slideIds;
+    element.$ionSlide = ++slideIds;
   }
 
   /**

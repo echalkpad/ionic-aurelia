@@ -1,5 +1,4 @@
-import {Component, ContentChildren, forwardRef, ViewChild, ContentChild, Renderer, ElementRef} from 'angular2/core';
-import {NgIf} from 'angular2/common';
+import {customElement, customAttribute, inlineView, inject, children, child, processContent, DOM} from 'aurelia-framework';
 
 import {Button} from '../button/button';
 import {Form} from '../../util/form';
@@ -39,31 +38,37 @@ import {Label} from '../label/label';
  * @see {@link /docs/v2/components#lists List Component Docs}
  * @see {@link ../../list/List List API Docs}
  */
-@Component({
-  selector: 'ion-item,[ion-item]',
-  template:
-    '<ng-content select="[item-left],ion-checkbox"></ng-content>' +
+ // TODO: check how to apply same behavior for customAttribute
+@customElement('ion-item')
+@customAttribute('ion-item')
+@inlineView(
+  '<template class="item">' +
+    '<content select="[item-left],ion-checkbox"></content>' +
     '<div class="item-inner">' +
       '<div class="input-wrapper">' +
-        '<ng-content select="ion-label"></ng-content>' +
-        '<ion-label *ngIf="_viewLabel">' +
-          '<ng-content></ng-content>'+
-        '</ion-label>' +
-        '<ng-content select="ion-select,ion-input,ion-textarea"></ng-content>' +
+        '<content select="ion-label"></content>' +
+        '<content select="ion-select,ion-input,ion-textarea"></content>' +
       '</div>' +
-      '<ng-content select="[item-right],ion-radio,ion-toggle"></ng-content>' +
+      '<content select="[item-right],ion-radio,ion-toggle"></content>' +
     '</div>' +
-    '<ion-button-effect></ion-button-effect>',
-  host: {
-    'class': 'item'
-  },
-  directives: [NgIf, Label]
-})
+    '<ion-button-effect></ion-button-effect>' +
+  '</template>'
+)
+@inject(Form, Element)
+@processContent(ensureHasLabel)
 export class Item {
   private _ids: number = -1;
   private _inputs: Array<string> = [];
-  private _label: Label;
   private _viewLabel: boolean = true;
+
+  @children('button')
+  private _buttons: Button[];
+
+  @children('ion-icon')
+  private _icons: Icon[];
+
+  @child('ion-label')
+  private _label: Label;
 
   /**
    * @private
@@ -75,7 +80,7 @@ export class Item {
    */
   labelId: string = null;
 
-  constructor(form: Form, private _renderer: Renderer, private _elementRef: ElementRef) {
+  constructor(form: Form, private _element: Element) {
     this.id = form.nextId().toString();
   }
 
@@ -90,7 +95,7 @@ export class Item {
   /**
    * @private
    */
-  ngAfterContentInit() {
+  attached() {
     if (this._viewLabel && this._inputs.length) {
       let labelText = this.getLabelText().trim();
       this._viewLabel = (labelText.length > 0);
@@ -105,7 +110,7 @@ export class Item {
    * @private
    */
   setCssClass(cssClass: string, shouldAdd: boolean) {
-    this._renderer.setElementClass(this._elementRef.nativeElement, cssClass, shouldAdd);
+    this._element.classList[shouldAdd ? 'add' : 'remove'](cssClass);
   }
 
   /**
@@ -118,8 +123,7 @@ export class Item {
   /**
    * @private
    */
-  @ContentChild(Label)
-  private set contentLabel(label: Label) {
+  private _labelChanged(label: Label) {
     if (label) {
       this._label = label;
       this.labelId = label.id = ('lbl-' + this.id);
@@ -133,19 +137,18 @@ export class Item {
   /**
    * @private
    */
-  @ViewChild(Label)
-  private set viewLabel(label: Label) {
-    if (!this._label) {
-      this._label = label;
-    }
-  }
+  // @ViewChild(Label)
+  // private set viewLabel(label: Label) {
+  //   if (!this._label) {
+  //     this._label = label;
+  //   }
+  // }
 
   /**
    * @private
    */
-  @ContentChildren(Button)
-  private set _buttons(buttons) {
-    buttons.toArray().forEach(button => {
+  private _buttonsChanged(buttons) {
+    buttons.forEach(button => {
       // Don't add the item-button class if the user specifies
       // a different size button
       if (!button.isItem && !button._size) {
@@ -154,13 +157,26 @@ export class Item {
     });
   }
 
-  /**
-   * @private
-   */
-  @ContentChildren(Icon)
-  private set _icons(icons) {
-    icons.toArray().forEach(icon => {
+  private _iconsChanged(icons) {
+    icons.forEach(icon => {
       icon.addClass('item-icon');
     });
   }
+}
+
+function ensureHasLabel(compiler, resources, element: HTMLElement, instruction) {
+  if (!element.querySelector('ion-label')) {
+    let label = DOM.createElement('ion-label');
+
+    Array.prototype.forEach.call(element.children, function(child) {
+      if (!child.matches('[item-left],ion-checkbox,ion-select,ion-input,ion-textarea,[item-right],ion-radio,ion-toggle')) {
+        label.appendChild(child);
+      }
+    });
+    element.appendChild(label);
+  }
+
+  instruction.anchorIsContainer = true;
+
+  return true;
 }

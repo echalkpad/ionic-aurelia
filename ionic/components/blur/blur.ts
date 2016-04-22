@@ -1,4 +1,4 @@
-import {Directive, Renderer, ElementRef} from 'angular2/core';
+import {customAttribute} from 'aurelia-framework';
 
 
 /**
@@ -16,11 +16,9 @@ import {Directive, Renderer, ElementRef} from 'angular2/core';
  * @demo /docs/v2/demos/blur/
  * @private
  */
-@Directive({
-  selector: '[blur]'
-})
+@customAttribute('blur')
 export class Blur {
-  constructor(private _elementRef: ElementRef, private _renderer: Renderer) {
-    _renderer.setElementStyle(_elementRef.nativeElement, '-webkit-backdrop-filter', 'blur(10px)');
+  constructor(element: Element) {
+    (<HTMLElement>element).style['-webkit-backdrop-filter'] = 'blur(10px)';
   }
 }

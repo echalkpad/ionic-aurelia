@@ -1,4 +1,3 @@
-import {ElementRef} from 'angular2/core';
 import * as dom from '../util/dom';
 
 let ids:number = 0;
@@ -11,33 +10,33 @@ let ids:number = 0;
 export class Ion {
   private _id: string;
 
-  constructor(protected elementRef: ElementRef) {
+  constructor(protected element: HTMLElement) {
     this._id = 'i' + ids++;
   }
 
-  getElementRef(): ElementRef {
-    return this.elementRef;
+  getElementRef(): HTMLElement {
+    return this.element;
   }
 
   getNativeElement(): any {
-    return this.elementRef.nativeElement;
+    return this.element;
   }
 
   getDimensions(): {
     width: number, height: number, left: number, top: number
   } {
-    return dom.getDimensions(this.elementRef.nativeElement, this._id);
+    return dom.getDimensions(this.element, this._id);
   }
 
   width(): number {
-    return dom.getDimensions(this.elementRef.nativeElement, this._id).width;
+    return dom.getDimensions(this.element, this._id).width;
   }
 
   height(): number {
-    return dom.getDimensions(this.elementRef.nativeElement, this._id).height;
+    return dom.getDimensions(this.element, this._id).height;
   }
 
-  ngOnDestroy() {
+  detached() {
     dom.clearDimensions(this._id);
   }
 

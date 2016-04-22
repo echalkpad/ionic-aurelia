@@ -1,4 +1,4 @@
-import {Directive, ElementRef, Renderer, Attribute, NgZone} from 'angular2/core';
+import {customElement, inlineView, inject, noView} from 'aurelia-framework';
 
 import {Ion} from '../ion';
 import {ItemSlidingGesture} from '../item/item-sliding-gesture';
@@ -19,9 +19,9 @@ import {ItemSlidingGesture} from '../item/item-sliding-gesture';
  * @see {@link /docs/v2/components#lists List Component Docs}
  *
  */
-@Directive({
-  selector: 'ion-list'
-})
+@customElement('ion-list')
+@inlineView('<template><content></content></template>')
+@inject(Element)
 export class List extends Ion {
   private _enableSliding: boolean = false;
 
@@ -35,15 +35,15 @@ export class List extends Ion {
    */
   slidingGesture: ItemSlidingGesture;
 
-  constructor(elementRef: ElementRef, private _zone: NgZone) {
-    super(elementRef);
-    this.ele = elementRef.nativeElement;
+  constructor(element: HTMLElement) {
+    super(element);
+    this.ele = element;
   }
 
   /**
    * @private
    */
-  ngOnDestroy() {
+  detached() {
     this.slidingGesture && this.slidingGesture.destroy();
     this.ele = this.slidingGesture = null;
   }
@@ -70,10 +70,8 @@ export class List extends Ion {
 
       if (shouldEnable) {
         console.debug('enableSlidingItems');
-        this._zone.runOutsideAngular(() => {
-          setTimeout(() => {
-            this.slidingGesture = new ItemSlidingGesture(this, this.ele);
-          });
+        setTimeout(() => {
+          this.slidingGesture = new ItemSlidingGesture(this, this.ele);
         });
 
       } else {
@@ -109,14 +107,14 @@ export class List extends Ion {
 /**
  * @private
  */
-@Directive({
-  selector: 'ion-list-header'
-})
+@customElement('ion-list-header')
+@noView
+@inject(Element)
 export class ListHeader {
   private _id: string;
 
-  constructor(private _renderer: Renderer, private _elementRef: ElementRef, @Attribute('id') id:string) {
-    this._id = id;
+  constructor(private _element: Element) {
+    this._id = _element.getAttribute('id');
   }
 
   public get id(): string {
@@ -125,7 +123,7 @@ export class ListHeader {
 
   public set id(val: string) {
     this._id = val;
-    this._renderer.setElementAttribute(this._elementRef.nativeElement, 'id', val);
+    this._element.setAttribute('id', val);
   }
 
 }

@@ -2,7 +2,7 @@
 module.exports = function(gulp, argv, buildConfig) {
 
   var snapshotConfig = require('./snapshot.config').config;
-  var _ = require('lodash');
+  var merge = require('lodash.merge');
   var http = require('http');
   var connect = require('connect');
   var serveStatic = require('serve-static');
@@ -11,7 +11,7 @@ module.exports = function(gulp, argv, buildConfig) {
 
   var projectRoot = path.resolve(__dirname, '../..');
   var protractorHttpServer;
-  var snapshotValues = _.merge(snapshotConfig.platformDefauls, argv);
+  var snapshotValues = merge(snapshotConfig.platformDefauls, argv);
 
   gulp.task('protractor-server', function() {
     var app = connect().use(serveStatic(projectRoot));  // serve everything that is static

@@ -3,7 +3,6 @@ var q = require('q');
 var IonicSnapshot = function(options) {
 
   // modules
-  var _ = require('lodash');
   var request = require('request');
   var colors = require('gulp-util').colors;
   var log = console.log.bind(console);

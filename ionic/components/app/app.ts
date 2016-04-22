@@ -1,5 +1,4 @@
-import {Injectable, NgZone} from 'angular2/core';
-import {Title} from 'angular2/platform/browser';
+import {autoinject} from 'aurelia-framework';
 
 import {Config} from '../../config/config';
 import {ClickBlock} from '../../util/click-block';
@@ -10,19 +9,16 @@ import {rafFrames} from '../../util/dom';
  * App utility service.  Allows you to look up components that have been
  * registered using the [Id directive](../Id/).
  */
-@Injectable()
+@autoinject
 export class IonicApp {
   private _cmps: {[id: string] : any} = {};
   private _disTime: number = 0;
   private _scrollTime: number = 0;
   private _title: string = '';
-  private _titleSrv: Title = new Title();
-  private _isProd: boolean = false;
 
   constructor(
     private _config: Config,
-    private _clickBlock: ClickBlock,
-    private _zone: NgZone
+    private _clickBlock: ClickBlock
   ) {}
 
   /**
@@ -31,26 +27,10 @@ export class IonicApp {
    */
   setTitle(val: string) {
     if (val !== this._title) {
+      // TODO: probably this is odd and
+      // title can be set using `configureRouter` method of root component
       this._title = val;
-      this._titleSrv.setTitle(val);
     }
-  }
-
-  /**
-   * Returns if the app has been set to be in be in production mode or not.
-   * Production mode can only be set within the config of `@App`. Defaults
-   * to `false`.
-   * @return {boolean}
-   */
-  isProd(): boolean {
-    return this._isProd;
-  }
-
-  /**
-   * @private
-   */
-  setProd(val: boolean) {
-    this._isProd = !!val;
   }
 
   /**

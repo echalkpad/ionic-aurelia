@@ -1,6 +1,6 @@
-import {Directive, ElementRef, Renderer, Input, Optional, Attribute} from 'angular2/core';
+import {customElement, Optional, inject, bindable, inlineView} from 'aurelia-framework';
 
-
+import {Attribute} from '../../util/di';
 /**
  * @name Label
  * @description
@@ -51,11 +51,13 @@ import {Directive, ElementRef, Renderer, Input, Optional, Attribute} from 'angul
  *
  */
 
-@Directive({
-  selector: 'ion-label'
-})
+@customElement('ion-label')
+@inject(Element, ...Attribute.all('floating', 'stacked', 'fixed', 'inset'))
+@inlineView('<template><content></content></template>')
 export class Label {
   private _id: string;
+
+  @bindable id: string;
 
   /**
    * @private
@@ -63,28 +65,19 @@ export class Label {
   type: string;
 
   constructor(
-    private _elementRef: ElementRef,
-    private _renderer: Renderer,
-    @Attribute('floating') isFloating: string,
-    @Attribute('stacked') isStacked: string,
-    @Attribute('fixed') isFixed: string,
-    @Attribute('inset') isInset: string
+    private _element: HTMLElement,
+    isFloating: string,
+    isStacked: string,
+    isFixed: string,
+    isInset: string
   ) {
     this.type = (isFloating === '' ? 'floating' : (isStacked === '' ? 'stacked' : (isFixed === '' ? 'fixed' : (isInset === '' ? 'inset' : null))));
   }
 
-  /**
-   * @private
-   */
-  @Input()
-  get id(): string {
-    return this._id;
-  }
-
-  set id(val: string) {
+  idChanged(val: string) {
     this._id = val;
     if (val) {
-      this._renderer.setElementAttribute(this._elementRef.nativeElement, 'id', val);
+      this._element.setAttribute('id', val);
     }
   }
 
@@ -92,7 +85,7 @@ export class Label {
    * @private
    */
   get text(): string {
-    return this._elementRef.nativeElement.textContent || '';
+    return this._element.textContent || '';
   }
 
   /**
@@ -100,7 +93,7 @@ export class Label {
    * @param {string} add class name
    */
   addClass(className: string) {
-    this._renderer.setElementClass(this._elementRef.nativeElement, className, true);
+    this._element.classList.add(className);
   }
 
 }

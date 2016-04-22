@@ -4,8 +4,14 @@
     "experimentalDecorators": true,
     "target": "es5",
     "module": "commonjs",
-    "declaration": true,
-    "outDir": "dist"
+    "outDir": "dist",
+    "declaration": false,
+    "noImplicitAny": false,
+    "noResolve": true,
+    "removeComments": true,
+    "noLib": false
+  },
+
   },
   "exclude": [
     "node_modules",
@@ -89,6 +95,7 @@
     "demos/title/index.ts",
     "demos/toggle/index.ts",
     "demos/toolbar/index.ts",
+    "dist/components/slides/swiper-widget.d.ts",
     "ionic/animations/animation.ts",
     "ionic/animations/builtins.ts",
     "ionic/animations/scroll-to.ts",
@@ -334,6 +341,7 @@
     "ionic/translation/translate.ts",
     "ionic/util.ts",
     "ionic/util/click-block.ts",
+    "ionic/util/di.ts",
     "ionic/util/dom.ts",
     "ionic/util/feature-detect.ts",
     "ionic/util/form.ts",

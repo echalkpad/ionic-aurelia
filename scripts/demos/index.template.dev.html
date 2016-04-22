@@ -9,28 +9,49 @@
   <link ios-href="../output.ios.css" rel="stylesheet">
   <link md-href="../output.md.css" rel="stylesheet">
   <link wp-href="../output.wp.css" rel="stylesheet">
-  <script type="text/javascript" src="/dist/demos/scrollbar-fix.js"></script>
-  <script src="../../js/es6-shim.min.js"></script>
+  <!-- <script type="text/javascript" src="/dist/demos/scrollbar-fix.js"></script> -->
   <script src="../../js/es6-module-loader.src.js"></script>
   <script src="../../js/system.src.js"></script>
   <script>
     System.config({
+      defaultJSExtensions: true,
       map: {
-        'angular2': '/angular2'
+        'aurelia-binding': '../../js/aurelia-binding/dist/system/aurelia-binding.js',
+        'aurelia-bootstrapper': '../../js/aurelia-bootstrapper/dist/system/aurelia-bootstrapper.js',
+        'aurelia-bootstrapper-webpack': '../../js/aurelia-bootstrapper-webpack/dist/system/aurelia-bootstrapper-webpack.js',
+        'aurelia-dependency-injection': '../../js/aurelia-dependency-injection/dist/system/aurelia-dependency-injection.js',
+        'aurelia-event-aggregator': '../../js/aurelia-event-aggregator/dist/system/aurelia-event-aggregator.js',
+        'aurelia-fetch-client': '../../js/aurelia-fetch-client/dist/system/aurelia-fetch-client.js',
+        'aurelia-framework': '../../js/aurelia-framework/dist/system/aurelia-framework.js',
+        'aurelia-history': '../../js/aurelia-history/dist/system/aurelia-history.js',
+        'aurelia-history-browser': '../../js/aurelia-history-browser/dist/system/aurelia-history-browser.js',
+        'aurelia-loader': '../../js/aurelia-loader/dist/system/aurelia-loader.js',
+        'aurelia-loader-webpack': '../../js/aurelia-loader-webpack/dist/system/aurelia-loader-webpack.js',
+        'aurelia-loader-webpack0': '../../js/aurelia-loader-webpack0/dist/system/aurelia-loader-webpack0.js',
+        'aurelia-logging': '../../js/aurelia-logging/dist/system/aurelia-logging.js',
+        'aurelia-logging-console': '../../js/aurelia-logging-console/dist/system/aurelia-logging-console.js',
+        'aurelia-metadata': '../../js/aurelia-metadata/dist/system/aurelia-metadata.js',
+        'aurelia-pal': '../../js/aurelia-pal/dist/system/aurelia-pal.js',
+        'aurelia-pal-browser': '../../js/aurelia-pal-browser/dist/system/aurelia-pal-browser.js',
+        'aurelia-path': '../../js/aurelia-path/dist/system/aurelia-path.js',
+        'aurelia-polyfills': '../../js/aurelia-polyfills/dist/system/aurelia-polyfills.js',
+        'aurelia-route-recognizer': '../../js/aurelia-route-recognizer/dist/system/aurelia-route-recognizer.js',
+        'aurelia-router': '../../js/aurelia-router/dist/system/aurelia-router.js',
+        'aurelia-task-queue': '../../js/aurelia-task-queue/dist/system/aurelia-task-queue.js',
+        'aurelia-templating': '../../js/aurelia-templating/dist/system/aurelia-templating.js',
+        'aurelia-templating-binding': '../../js/aurelia-templating-binding/dist/system/aurelia-templating-binding.js',
+        'aurelia-templating-resources': '../../js/aurelia-templating-resources/dist/system/aurelia-templating-resources.js',
+        'aurelia-templating-router': '../../js/aurelia-templating-router/dist/system/aurelia-templating-router.js',
+        'ionic-aurelia': '../../bundles/ionic.system.js'
       },
       packages: {
-        'ionic-angular': {
+        'ionic-aurelia': {
           main: 'index'
         }
       }
     });
   </script>
-  <script src="../../js/angular2-polyfills.js"></script>
-  <script src="../../js/angular2.dev.js"></script>
-  <script src="../../js/router.dev.js"></script>
-  <script src="../../js/http.dev.js"></script>
   <script src="../../bundles/ionic.system.js"></script>
-  <script src="../../js/Rx.js"></script>
 </head>
 <body>
   <ion-app>

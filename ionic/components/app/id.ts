@@ -1,4 +1,4 @@
-import {AppViewManager, ElementRef, Directive, Renderer, Input} from 'angular2/core';
+import {customAttribute, autoinject, bindable} from 'aurelia-framework';
 
 import {IonicApp} from './app';
 
@@ -22,7 +22,7 @@ import {IonicApp} from './app';
  *   this.app = app
  * }
  *
- * ngAfterViewInit() {
+ * attached() {
  *   var checkbox = this.app.getComponent("myCheckbox");
  *   if (checkbox.checked) {
  *     console.log('checkbox is checked');
@@ -36,34 +36,34 @@ import {IonicApp} from './app';
  *
  * @demo /docs/v2/demos/id/
  */
-@Directive({
-  selector: '[id]'
-})
+@customAttribute('id')
+@autoinject
 export class IdRef {
-  private _component: any;
 
   /**
    * @private
    */
-  @Input() id: string;
+  value: string;
 
-  constructor(private _app: IonicApp, elementRef: ElementRef, appViewManager: AppViewManager) {
+  private _component: Object;
+
+  constructor(private _app: IonicApp, element: Element) {
     // Grab the component this directive is attached to
-    this._component = appViewManager.getComponent(elementRef);
+    this._component = (<any>element).au.controller.viewModel;
   }
 
   /**
    * @private
    */
-  ngOnInit() {
-    this._app.register(this.id, this._component);
+  created() {
+    this._app.register(this.value, this._component);
   }
 
   /**
    * @private
    */
-  ngOnDestroy() {
-    this._app.unregister(this.id);
+  detached() {
+    this._app.unregister(this.value);
   }
 }
 
@@ -71,18 +71,17 @@ export class IdRef {
 /**
  * @private
  */
-@Directive({
-  selector: '[attr]'
-})
-
+@customAttribute('attr')
+@autoinject
 export class Attr {
-  @Input() attr: string;
-  constructor(private _renderer: Renderer, private _elementRef: ElementRef) {}
+  value: string;
+
+  constructor(private _element: Element) {}
 
 /**
  * @private
  */
-  ngOnInit() {
-    this._renderer.setElementAttribute(this._elementRef.nativeElement, this.attr, '');
+  created() {
+    this._element.setAttribute(this.value, '');
   }
 }

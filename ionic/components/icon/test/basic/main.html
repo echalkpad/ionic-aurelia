@@ -22,16 +22,16 @@
     </ion-item>
 
     <ion-item>
-      <ion-icon name="home" isActive="true" item-left></ion-icon>
+      <ion-icon name="home" is-active="true" item-left></ion-icon>
       <code>
-        name="home" isActive="true"
+        name="home" is-active="true"
       </code>
     </ion-item>
 
     <ion-item>
-      <ion-icon name="home" isActive.bind="isActive" item-left></ion-icon>
+      <ion-icon name="home" is-active.bind="isActive" item-left></ion-icon>
       <code>
-        name="home" isActive.bind="isActive"
+        name="home" is-active.bind="isActive"
       </code>
     </ion-item>
 
@@ -79,12 +79,11 @@
   </ion-list>
 
   <p>
-    <button (click)="updateIcon()">
+    <button click.trigger="updateIcon()">
       <ion-icon name.bind="btnIcon"></ion-icon>
       Update icon
     </button>
   </p>
-
 </ion-content>
 
 <style>

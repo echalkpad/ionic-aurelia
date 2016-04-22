@@ -1,4 +1,4 @@
-import {Component, ElementRef, Renderer, Attribute, Optional, Input} from 'angular2/core';
+import {customElement, customAttribute, inlineView, processContent, inject, bindable} from 'aurelia-framework';
 
 import {Config} from '../../config/config';
 import {Toolbar} from '../toolbar/toolbar';
@@ -32,13 +32,21 @@ import {isTrueProperty} from '../../util/util';
   * @demo /docs/v2/demos/button/
   * @see {@link /docs/v2/components#buttons Button Component Docs}
  */
-@Component({
-  selector: 'button:not([ion-item]),[button]',
-  template:
+@customElement('button')
+@customAttribute('button')
+@inlineView(
+  '<template>' +
     '<span class="button-inner">' +
-      '<ng-content></ng-content>' +
+      '<content></content>' +
     '</span>' +
-    '<ion-button-effect></ion-button-effect>'
+    '<ion-button-effect></ion-button-effect>' +
+  '</template>'
+)
+@inject(Config, Element)
+@processContent(function(compiler, resources, element, instruction) {
+  instruction.anchorIsContainer = true;
+
+  return true;
 })
 export class Button {
   private _role: string = 'button'; // bar-button/item-button
@@ -52,79 +60,95 @@ export class Button {
   private _init: boolean;
 
   /**
-   * @private
-   */
-  isItem: boolean;
-
-  /**
    * @input {string} Large button.
    */
-  @Input()
-  set large(val: boolean) {
-    this._attr('_size', 'large', val);
-  }
+  @bindable large: boolean;
 
   /**
    * @input {string} Small button.
    */
-  @Input()
-  set small(val: boolean) {
-    this._attr('_size', 'small', val);
-  }
+  @bindable small: boolean;
 
   /**
    * @input {string} Default button.
    */
-  @Input()
-  set default(val: boolean) {
-    this._attr('_size', 'default', val);
-  }
+  @bindable default: boolean;
 
   /**
    * @input {string} A transparent button with a border.
    */
-  @Input()
-  set outline(val: boolean) {
-    this._attr('_style', 'outline', val);
-  }
+  @bindable outline: boolean;
 
   /**
    * @input {string} A transparent button without a border.
    */
-  @Input()
-  set clear(val: boolean) {
-    this._attr('_style', 'clear', val);
-  }
+  @bindable clear: boolean;
 
   /**
    * @input {string} Force a solid button. Useful for buttons within an item.
    */
-  @Input()
-  set solid(val: boolean) {
-    this._attr('_style', 'solid', val);
-  }
+  @bindable solid: boolean;
 
   /**
    * @input {string} A button with rounded corners.
    */
-  @Input()
-  set round(val: boolean) {
-    this._attr('_shape', 'round', val);
-  }
+  @bindable round: boolean;
 
   /**
    * @input {string} A button that fills its parent container with a border-radius.
    */
-  @Input()
-  set block(val: boolean) {
-    this._attr('_display', 'block', val);
-  }
+  @bindable block: boolean;
 
   /**
    * @input {string} A button that fills its parent container without a border-radius or borders on the left/right.
    */
-  @Input()
-  set full(val: boolean) {
+  @bindable full: boolean;
+
+  /**
+   * @input {string} Dynamically set which color attribute this button should use.
+   */
+  @bindable color: string;
+
+  /**
+   * @private
+   */
+  isItem: boolean;
+
+
+  largeChanged(val: boolean) {
+    this._attr('_size', 'large', val);
+  }
+
+  smallChanged(val: boolean) {
+    this._attr('_size', 'small', val);
+  }
+
+
+  defaultChanged(val: boolean) {
+    this._attr('_size', 'default', val);
+  }
+
+  outlineChanged(val: boolean) {
+    this._attr('_style', 'outline', val);
+  }
+
+  clearChanged(val: boolean) {
+    this._attr('_style', 'clear', val);
+  }
+
+  solidChanged(val: boolean) {
+    this._attr('_style', 'solid', val);
+  }
+
+  roundChanged(val: boolean) {
+    this._attr('_shape', 'round', val);
+  }
+
+  blockChanged(val: boolean) {
+    this._attr('_display', 'block', val);
+  }
+
+  fullChanged(val: boolean) {
     this._attr('_display', 'full', val);
   }
 
@@ -139,11 +163,7 @@ export class Button {
     }
   }
 
-  /**
-   * @input {string} Dynamically set which color attribute this button should use.
-   */
-  @Input()
-  set color(val: string) {
+  colorChanged(val: string) {
     this._assignCss(false);
     this._colors = [val];
     this._assignCss(true);
@@ -151,38 +171,34 @@ export class Button {
 
   constructor(
     config: Config,
-    private _elementRef: ElementRef,
-    private _renderer: Renderer,
-    @Attribute('ion-item') ionItem: string
+    private _element: Element
   ) {
 
-    this.isItem = (ionItem === '');
-
-    let element = _elementRef.nativeElement;
+    this.isItem = (_element.getAttribute('ion-item') === '');
 
     if (config.get('hoverCSS') === false) {
-      _renderer.setElementClass(_elementRef.nativeElement, 'disable-hover', true);
+      _element.classList.add('disable-hover');
     }
 
-    if (element.hasAttribute('ion-item')) {
+    if (_element.hasAttribute('ion-item')) {
       // no need to put on these classes for an ion-item
       this._role = null;
       return;
     }
 
-    if (element.hasAttribute('disabled')) {
+    if (_element.hasAttribute('disabled')) {
       this._disabled = true;
     }
 
-    this._readAttrs(element);
+    this._readAttrs(_element);
   }
 
   /**
    * @private
    */
-  ngAfterContentInit() {
+  attached() {
     this._init = true;
-    this._readIcon(this._elementRef.nativeElement);
+    this._readIcon(this._element);
     this._assignCss(true);
   }
 
@@ -190,7 +206,7 @@ export class Button {
    * @private
    */
   addClass(className: string) {
-    this._renderer.setElementClass(this._elementRef.nativeElement, className, true);
+    this._element.classList.add(className);
   }
 
   /**
@@ -203,9 +219,9 @@ export class Button {
   /**
    * @private
    */
-  private _readIcon(element: HTMLElement) {
+  private _readIcon(element: Element) {
     // figure out if and where the icon lives in the button
-    let childNodes = element.childNodes;
+    let childNodes: NodeList = (<HTMLElement>element).children;
     if (childNodes.length > 0) {
       childNodes = childNodes[0].childNodes;
     }
@@ -248,7 +264,7 @@ export class Button {
   /**
    * @private
    */
-  private _readAttrs(element: HTMLElement) {
+  private _readAttrs(element: Element) {
     let elementAttrs = element.attributes;
     let attrName;
     for (let i = 0, l = elementAttrs.length; i < l; i++) {
@@ -280,7 +296,7 @@ export class Button {
   private _assignCss(assignCssClass: boolean) {
     let role = this._role;
     if (role) {
-      this._renderer.setElementClass(this._elementRef.nativeElement, role, assignCssClass); // button
+      this._element.classList[assignCssClass ? 'add' : 'remove'](role); // button
 
       this._setClass(this._style, assignCssClass); // button-clear
       this._setClass(this._shape, assignCssClass); // button-round
@@ -300,7 +316,7 @@ export class Button {
    */
   private _setClass(type: string, assignCssClass: boolean) {
     if (type && this._init) {
-      this._renderer.setElementClass(this._elementRef.nativeElement, this._role + '-' + type.toLowerCase(), assignCssClass);
+      this._element.classList[assignCssClass ? 'add' : 'remove'](this._role + '-' + type.toLowerCase());
     }
   }
 

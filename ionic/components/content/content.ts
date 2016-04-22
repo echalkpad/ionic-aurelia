@@ -1,10 +1,10 @@
-import {Component, ElementRef, Optional, NgZone} from 'angular2/core';
+import {customElement, Optional, inlineView, inject} from 'aurelia-framework';
 
 import {Ion} from '../ion';
 import {IonicApp} from '../app/app';
 import {Config} from '../../config/config';
 import {raf, transitionEnd}  from '../../util/dom';
-import {ViewController} from '../nav/view-controller';
+// import {ViewController} from '../nav/view-controller';
 import {Animation} from '../../animations/animation';
 import {ScrollTo} from '../../animations/scroll-to';
 
@@ -25,15 +25,17 @@ import {ScrollTo} from '../../animations/scroll-to';
  * ```
  *
  */
-@Component({
-  selector: 'ion-content',
-  template:
+@customElement('ion-content')
+@inlineView(
+  '<template>' +
     '<scroll-content>' +
-      '<ng-content></ng-content>' +
+      '<content select=":not(ion-fixed):not(ion-refresher)"></content>' +
     '</scroll-content>' +
-    '<ng-content select="ion-fixed"></ng-content>' +
-    '<ng-content select="ion-refresher"></ng-content>'
-})
+    '<content select="ion-fixed"></content>' +
+    '<content select="ion-refresher"></content>' +
+  '</template>'
+)
+@inject(Element, Config, IonicApp)
 export class Content extends Ion {
   private _padding: number = 0;
   private _scrollTo: ScrollTo;
@@ -45,32 +47,28 @@ export class Content extends Ion {
   scrollElement: HTMLElement;
 
   constructor(
-    private _elementRef: ElementRef,
+    _element: HTMLElement,
     private _config: Config,
-    private _app: IonicApp,
-    private _zone: NgZone,
-    @Optional() viewCtrl: ViewController
+    private _app: IonicApp
   ) {
-    super(_elementRef);
+    super(_element);
 
-    if (viewCtrl) {
-      viewCtrl.setContent(this);
-      viewCtrl.setContentRef(_elementRef);
-    }
+    // if (viewCtrl) {
+    //   viewCtrl.setContent(this);
+    //   viewCtrl.setContentRef(_element);
+    // }
   }
 
   /**
    * @private
    */
-  ngOnInit() {
+  created() {
     let self = this;
-    self.scrollElement = self._elementRef.nativeElement.children[0];
+    self.scrollElement = self.getNativeElement().children[0];
 
     if (self._config.get('tapPolyfill') === true) {
-      self._zone.runOutsideAngular(function() {
-        self._scLsn = self.addScrollListener(function() {
-          self._app.setScrolling();
-        });
+      self._scLsn = self.addScrollListener(function() {
+        self._app.setScrolling();
       });
     }
   }
@@ -78,7 +76,7 @@ export class Content extends Ion {
   /**
    * @private
    */
-  ngOnDestroy() {
+  detached() {
     this._scLsn && this._scLsn();
     this.scrollElement = this._scLsn = null;
   }
@@ -96,7 +94,7 @@ export class Content extends Ion {
    *        this.app = app;
    *    }
    *   // Need to wait until the component has been initialized
-   *   ngAfterViewInit() {
+   *   attached() {
    *     // Here 'my-content' is the ID of my ion-content
    *     this.content = this.app.getComponent('my-content');
    *     this.content.addScrollListener(this.myScroll);
@@ -213,7 +211,7 @@ export class Content extends Ion {
    * ```ts
    * @Page({
    *   template: `<ion-content id="my-content">
-   *      <button (click)="scrollTo()"> Down 500px</button>
+   *      <button click.trigger="scrollTo()"> Down 500px</button>
    *   </ion-content>`
    * )}
    * export class MyPage{
@@ -221,7 +219,7 @@ export class Content extends Ion {
    *        this.app = app;
    *    }
    *   // Need to wait until the component has been initialized
-   *   ngAfterViewInit() {
+   *   attached() {
    *     // Here 'my-content' is the ID of my ion-content
    *     this.content = this.app.getComponent('my-content');
    *   }
