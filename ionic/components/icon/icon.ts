@@ -7,7 +7,7 @@ import {Config} from '../../config/config';
  * @description
  * Icons can be used on their own, or inside of a number of Ionic components.
  * For a full list of available icons, check out the
- * [Ionicons resource docs](../../../../resources/ionicons).
+ * [Ionicons docs](../../../../ionicons).
  *
  * One feature of Ionicons in Ionic is when icon names are set, the actual icon
  * which is rendered can change slightly depending on the mode the app is
@@ -34,7 +34,6 @@ import {Config} from '../../config/config';
  *
  */
 @customElement('ion-icon')
-@customElement('icon')
 @noView
 @inject(Config, Element)
 export class Icon {
@@ -72,13 +71,6 @@ export class Icon {
   constructor(config: Config, private _element: Element) {
     this.mode = config.get('iconMode');
     _element.setAttribute('role', 'img');
-
-    if (_element.tagName === 'ICON') {
-      // deprecated warning
-      console.warn('<icon> has been renamed to <ion-icon>');
-      console.warn('<ion-icon> requires the "name" attribute w/ a value');
-      console.warn('<icon home></icon> should now be <ion-icon name="home"></ion-icon>');
-    }
   }
 
   detached() {

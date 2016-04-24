@@ -1,7 +1,7 @@
 import {autoinject} from 'aurelia-framework';
 import {Config} from '../config/config';
 import {Form} from './form';
-import {hasFocusedTextInput, raf, rafFrames} from './dom';
+import {hasFocusedTextInput, raf, rafFrames, nativeTimeout} from './dom';
 
 /**
  * @name Keyboard
@@ -67,7 +67,7 @@ export class Keyboard {
  * @param {function} callback method you want to call when the keyboard has been closed
  * @return {function} returns a callback that gets fired when the keyboard is closed
  */
-  onClose(callback, pollingInternval=KEYBOARD_CLOSE_POLLING) {
+  onClose(callback, pollingInternval = KEYBOARD_CLOSE_POLLING, pollingChecksMax = KEYBOARD_POLLING_CHECKS_MAX) {
     console.debug('keyboard onClose');
     const self = this;
     let checks = 0;
@@ -80,20 +80,20 @@ export class Keyboard {
     }
 
     function checkKeyboard() {
-      console.debug('keyboard isOpen', self.isOpen(), checks);
-      if (!self.isOpen() || checks > 100) {
+      console.debug('keyboard isOpen', self.isOpen());
+      if (!self.isOpen() || checks > pollingChecksMax) {
         rafFrames(30, () => {
           console.debug('keyboard closed');
           callback();
         });
 
       } else {
-        setTimeout(checkKeyboard, pollingInternval);
+        nativeTimeout(checkKeyboard, pollingInternval);
       }
       checks++;
     }
 
-    setTimeout(checkKeyboard, pollingInternval);
+    nativeTimeout(checkKeyboard, pollingInternval);
 
     return promise;
   }
@@ -147,7 +147,7 @@ export class Keyboard {
 
     // default is to add the focus-outline when the tab key is used
     function keyDown(ev) {
-      if (!isKeyInputEnabled && ev.keyCode == 9) {
+      if (!isKeyInputEnabled && ev.keyCode === 9) {
         isKeyInputEnabled = true;
         enableKeyInput();
       }
@@ -176,3 +176,4 @@ export class Keyboard {
 }
 
 const KEYBOARD_CLOSE_POLLING = 150;
+const KEYBOARD_POLLING_CHECKS_MAX = 100;

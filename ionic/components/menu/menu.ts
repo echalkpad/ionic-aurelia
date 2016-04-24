@@ -1,4 +1,4 @@
-import {Component, forwardRef, Directive, Host, EventEmitter, ElementRef, NgZone, Input, Output, Renderer} from 'angular2/core';
+import {Component, forwardRef, Directive, Host, EventEmitter, ElementRef, NgZone, Input, Output, Renderer, ChangeDetectionStrategy, ViewEncapsulation} from 'angular2/core';
 
 import {Ion} from '../ion';
 import {Config} from '../../config/config';
@@ -21,7 +21,9 @@ import {isTrueProperty} from '../../util/util';
   template:
     '<ng-content></ng-content>' +
     '<div tappable disable-activated class="backdrop"></div>',
-  directives: [forwardRef(() => MenuBackdrop)]
+  directives: [forwardRef(() => MenuBackdrop)],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
 })
 export class Menu extends Ion {
   private _preventTime: number = 0;
@@ -163,7 +165,7 @@ export class Menu extends Ion {
 
     // register listeners if this menu is enabled
     // check if more than one menu is on the same side
-	  let hasEnabledSameSideMenu = self._menuCtrl.getMenus().some(m => {
+    let hasEnabledSameSideMenu = self._menuCtrl.getMenus().some(m => {
       return m.side === self.side && m.enabled;
     });
     if (hasEnabledSameSideMenu) {

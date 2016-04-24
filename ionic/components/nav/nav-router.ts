@@ -17,27 +17,66 @@ import {ViewController} from './view-controller';
 })
 export class NavRouter extends RouterOutlet {
   private _lastUrl: string;
+  private _nav: Nav;
+  private _parent: Router;
 
   constructor(
-    _elementRef: ElementRef,
-    _loader: DynamicComponentLoader,
-    _parentRouter: Router,
+    elementRef: ElementRef,
+    loader: DynamicComponentLoader,
+    parentRouter: Router,
     @Attribute('name') nameAttr: string,
-    private _nav: Nav
+    nav: Nav
   ) {
-    super(_elementRef, _loader, _parentRouter, nameAttr);
+    if (nav.parent) {
+      parentRouter = parentRouter.childRouter(nav);
+    }
+    super(elementRef, loader, parentRouter, nameAttr);
+
+    this._nav = nav;
+    this._parent = parentRouter;
 
     // register this router with Ionic's NavController
     // Ionic's NavController will call this NavRouter's "stateChange"
     // method when the NavController has...changed its state
-    _nav.registerRouter(this);
+    nav.registerRouter(this);
+  }
+
+  stateChange(direction: string, viewCtrl: ViewController) {
+    // stateChange is called by Ionic's NavController
+    // viewCtrl is Ionic's ViewController class, which has the properties "componentType" and "params"
+
+    // only do an update if there's an actual view change
+    if (!viewCtrl) {
+      return;
+    }
+
+    // get the best PathRecognizer for this view's componentType
+    let pathRecognizer = this.getPathRecognizerByComponent(viewCtrl.componentType);
+    if (pathRecognizer) {
+
+      // generate a componentInstruction from the view's PathRecognizer and params
+      let componentInstruction = pathRecognizer.generate(viewCtrl.data);
+
+      // create a ResolvedInstruction from the componentInstruction
+      let instruction = new ResolvedInstruction(componentInstruction, null, null);
+      if (instruction) {
+        let url = instruction.toRootUrl();
+        if (url === this._lastUrl) return;
+
+        this._lastUrl = url;
+
+        this._parent.navigateByInstruction(instruction);
+
+        console.debug('NavRouter, stateChange, name:', viewCtrl.name, 'id:', viewCtrl.id, 'url:', url);
+      }
+    }
   }
 
   activate(nextInstruction: ComponentInstruction): Promise<any> {
     var previousInstruction = this['_currentInstruction'];
     this['_currentInstruction'] = nextInstruction;
     var componentType = nextInstruction.componentType;
-    var childRouter = this['_parentRouter'].childRouter(componentType);
+    var childRouter = this._parent.childRouter(componentType);
 
     // prevent double navigations to the same view
     let instruction = new ResolvedInstruction(nextInstruction, null, null);
@@ -59,47 +98,15 @@ export class NavRouter extends RouterOutlet {
     return Promise.resolve();
   }
 
-  stateChange(direction: string, viewCtrl: ViewController) {
-    // stateChange is called by Ionic's NavController
-    // type could be "push" or "pop"
-    // viewCtrl is Ionic's ViewController class, which has the properties "componentType" and "params"
-
-    // only do an update if there's an actual view change
-    if (!viewCtrl) return;
-
-    // get the best PathRecognizer for this view's componentType
-    let pathRecognizer = this.getPathRecognizerByComponent(viewCtrl.componentType);
-    if (pathRecognizer) {
-
-      // generate a componentInstruction from the view's PathRecognizer and params
-      let componentInstruction = pathRecognizer.generate(viewCtrl.data);
-
-      // create a ResolvedInstruction from the componentInstruction
-      let instruction = new ResolvedInstruction(componentInstruction, null, null);
-      if (instruction) {
-        let url = instruction.toRootUrl();
-        if (url === this._lastUrl) return;
-
-        this._lastUrl = url;
-
-        this['_parentRouter'].navigateByInstruction(instruction);
-
-        console.debug('NavRouter, stateChange, name:', viewCtrl.name, 'id:', viewCtrl.id, 'url:', url);
-      }
-    }
-  }
-
   getPathRecognizerByComponent(componentType) {
     // given a componentType, figure out the best PathRecognizer to use
-    let rules = this['_parentRouter'].registry._rules;
+    let rules = this._parent.registry['_rules'];
 
     let pathRecognizer = null;
     rules.forEach((rule) => {
-
-      pathRecognizer = rule.matchers.find((matcherPathRecognizer) => {
-        return (matcherPathRecognizer.handler.componentType === componentType);
+      pathRecognizer = rule.rules.find(function(routeRule) {
+        return routeRule.handler.componentType === componentType;
       });
-
     });
 
     return pathRecognizer;

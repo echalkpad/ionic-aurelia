@@ -1,7 +1,7 @@
 {
   "private": "true",
   "name": "ionic2",
-  "version": "2.0.0-beta.3",
+  "version": "2.0.0-beta.6",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -28,7 +28,7 @@
     "colors": "^1.1.2",
     "es6-shim": "^0.33.6",
     "inquirer": "0.11.0",
-    "ionicons": "3.0.0-alpha.3",
+    "ionicons": "3.0.0",
     "lodash": "3.10.1",
     "mkdirp-no-bin": "0.5.1",
     "q": "1.4.1"
@@ -66,8 +66,10 @@
     "gulp-remember": "^0.3.0",
     "gulp-rename": "~1.2.0",
     "gulp-sass": "^2.0.4",
+    "gulp-scss-lint": "^0.3.9",
     "gulp-shell": "^0.4.0",
     "gulp-strip-debug": "^1.1.0",
+    "gulp-tslint": "^4.3.4",
     "gulp-typescript": "2.12.1",
     "gulp-util": "^3.0.6",
     "gulp-watch": "^4.2.4",
@@ -96,6 +98,8 @@
     "strip-sourcemap-loader": "0.0.1",
     "systemjs": "0.19.6",
     "through2": "^0.6.3",
+    "tslint": "^3.7.1",
+    "tslint-eslint-rules": "^1.2.0",
     "typescript": "1.8.7",
     "vinyl": "^0.4.6",
     "webpack": "^1.12.2",

@@ -27,7 +27,7 @@ import {isTrueProperty} from '../../util/util';
   * @property [fab-center] - Position a fab button towards the center.
   * @property [fab-top] - Position a fab button towards the top.
   * @property [fab-bottom] - Position a fab button towards the bottom.
-  * @property [color] - Dynamically set which color attribute this button should use.
+  * @property [color] - Dynamically set which predefined color this button should use (e.g. default, secondary, danger, etc).
   *
   * @demo /docs/v2/demos/button/
   * @see {@link /docs/v2/components#buttons Button Component Docs}
@@ -58,6 +58,16 @@ export class Button {
   private _icon: string = null; // left/right/only
   private _disabled: boolean = false; // disabled
   private _init: boolean;
+
+  /**
+   * @private
+   */
+  isItem: boolean;
+
+  /**
+   * @input {string} The category of the button.
+   */
+  @bindable category: string;
 
   /**
    * @input {string} Large button.
@@ -108,12 +118,6 @@ export class Button {
    * @input {string} Dynamically set which color attribute this button should use.
    */
   @bindable color: string;
-
-  /**
-   * @private
-   */
-  isItem: boolean;
-
 
   largeChanged(val: boolean) {
     this._attr('_size', 'large', val);
@@ -191,6 +195,16 @@ export class Button {
     }
 
     this._readAttrs(_element);
+  }
+
+  /**
+   * @private
+   */
+  created() {
+    // If the button has a role applied to it
+    if (this.category) {
+      this.setRole(this.category);
+    }
   }
 
   /**

@@ -1,8 +1,9 @@
 import {autoinject} from 'aurelia-framework';
+import {EventAggregator} from 'aurelia-event-aggregator';
 
 import {Config} from '../../config/config';
 import {ClickBlock} from '../../util/click-block';
-import {rafFrames} from '../../util/dom';
+import {Platform} from '../../platform/platform';
 
 
 /**
@@ -11,15 +12,29 @@ import {rafFrames} from '../../util/dom';
  */
 @autoinject
 export class IonicApp {
-  private _cmps: {[id: string] : any} = {};
+  private _cmps: {[id: string]: any} = {};
   private _disTime: number = 0;
   private _scrollTime: number = 0;
   private _title: string = '';
+  private _rootNav: any = null;
+  private _appInjector: Injector;
 
   constructor(
     private _config: Config,
-    private _clickBlock: ClickBlock
-  ) {}
+    private _clickBlock: ClickBlock,
+    events: EventAggregator
+  ) {
+    events.subscribe('backButton', () => {
+      let activeNav = this.getActiveNav();
+      if (activeNav) {
+        if (activeNav.length() === 1) {
+          platform.exitApp();
+        } else {
+          activeNav.pop();
+        }
+      }
+    });
+  }
 
   /**
    * Sets the document title.
@@ -45,7 +60,7 @@ export class IonicApp {
    * it will automatically enable the app again. It's basically a fallback incase
    * something goes wrong during a transition and the app wasn't re-enabled correctly.
    */
-  setEnabled(isEnabled: boolean, duration: number=700) {
+  setEnabled(isEnabled: boolean, duration: number = 700) {
     this._disTime = (isEnabled ? 0 : Date.now() + duration);
 
     if (duration > 32 || isEnabled) {
@@ -76,6 +91,38 @@ export class IonicApp {
    */
   isScrolling(): boolean {
     return (this._scrollTime + 64 > Date.now());
+  }
+
+  /**
+   * @private
+   */
+  getActiveNav(): any {
+    var nav = this._rootNav || null;
+    var activeChildNav;
+
+    while (nav) {
+      activeChildNav = nav.getActiveChildNav();
+      if (!activeChildNav) {
+        break;
+      }
+      nav = activeChildNav;
+    }
+
+    return nav;
+  }
+
+  /**
+   * @private
+   */
+  getRootNav(): any {
+    return this._rootNav;
+  }
+
+  /**
+   * @private
+   */
+  setRootNav(nav: any) {
+    this._rootNav = nav;
   }
 
   /**
@@ -135,4 +182,19 @@ export class IonicApp {
     return this._cmps[id];
   }
 
+  /**
+   * Set the global app injector that contains references to all of the instantiated providers
+   * @param injector
+   */
+  setAppInjector(injector: Injector) {
+    this._appInjector = injector;
+  }
+
+  /**
+   * Get an instance of the global app injector that contains references to all of the instantiated providers
+   * @returns {Injector}
+   */
+  getAppInjector(): Injector {
+    return this._appInjector;
+  }
 }

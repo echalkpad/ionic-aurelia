@@ -2,20 +2,19 @@ export * from './config/bootstrap'
 export * from './config/config'
 
 // export * from './components'
-
-export * from './platform/platform'
-export * from './platform/storage'
+export * from './platform/platform';
+export * from './platform/storage';
 
 export * from './util/click-block'
 export {EventAggregator as Events} from 'aurelia-event-aggregator';
 export * from './util/keyboard'
 export * from './util/form'
 
-export * from './animations/animation'
-export * from './transitions/transition'
+export * from './animations/animation';
+export * from './transitions/transition';
 
-export * from './translation/translate'
-export * from './translation/translate_pipe'
+export * from './translation/translate';
+export * from './translation/translate_pipe';
 
 // these modules don't export anything
 import './config/modes'
@@ -35,16 +34,18 @@ export function configure(pluginConfig, callback) {
     callback(config);
   }
 
-  let providers = createProviders({ config: config });
+  const providers = createProviders({ config: config });
 
-  pluginConfig.globalResources([
-    'ionic-aurelia/components/icon/icon',
-    'ionic-aurelia/components/content/content',
-    'ionic-aurelia/components/button/button',
-    'ionic-aurelia/components/item/item',
-    'ionic-aurelia/components/list/list',
-    'ionic-aurelia/components/label/label',
-  ]);
+  const ENABLED_COMPONENTS = [
+    'icon',
+    'content',
+    'button',
+    'item',
+    'list',
+    'label'
+  ];
+
+  pluginConfig.globalResources(ENABLED_COMPONENTS.map(name => `ionic-aurelia/components/${name}/${name}`);
 
   providers.forEach(function(provider) {
     pluginConfig.container.registerInstance(provider.constructor, provider);

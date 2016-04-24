@@ -1,14 +1,19 @@
-import {getQuerystring, assign} from '../util/util';
-import {ready, windowDimensions, flushDimensionCache} from '../util/dom';
+import {EventEmitter, NgZone} from 'angular2/core';
+
 import {Config} from '../config/config';
+import {getQuerystring} from '../util/util';
+import {ready, windowDimensions, flushDimensionCache} from '../util/dom';
 
 /**
  * @name Platform
  * @description
- * Platform returns the availble information about your current platform.
- * Platforms in Ionic 2 are much more complex then in V1, returns not just a single platform,
- * but a hierarchy of information, such as a devices OS, phone vs tablet, or mobile vs browser.
- * With this information you can completely custimize your app to fit any device and platform.
+ * The Platform service can be used to get information about your current device.
+ * You can get all of the platforms associated with the device using the [platforms](#platforms)
+ * method, including whether the app is being viewed from a tablet, if it's
+ * on a mobile device or browser, and the exact platform (ios, android, etc).
+ * You can also get the orientation of the device, if it uses right-to-left
+ * language direction, and much much more. With this information you can completely
+ * customize your app to fit any device.
  *
  * @usage
  * ```ts
@@ -16,36 +21,38 @@ import {Config} from '../config/config';
  *
  * @Page({...})
  * export MyPage {
- *    constructor(platform: Platform){
- *      this.platform = platform;
- *    }
+ *   constructor(platform: Platform) {
+ *     this.platform = platform;
+ *   }
  * }
  * ```
  * @demo /docs/v2/demos/platform/
  */
 export class Platform {
   private _platforms: Array<string>;
-  private _versions: any={};
+  private _versions: {[name: string]: PlatformVersion} = {};
   private _dir: string;
   private _lang: string;
   private _url: string;
   private _qs: any;
   private _ua: string;
   private _bPlt: string;
-  private _onResizes: Array<Function>=[];
+  private _onResizes: Array<Function> = [];
   private _readyPromise: Promise<any>;
   private _readyResolve: any;
-  private _engineReady: any;
   private _resizeTm: any;
+  private _zone: NgZone;
+
+  constructor(platforms = []) {
+    this._platforms = platforms;
+    this._readyPromise = new Promise(res => { this._readyResolve = res; } );
+  }
 
   /**
    * @private
    */
-  platformOverride: string;
-
-  constructor(platforms=[]) {
-    this._platforms = platforms;
-    this._readyPromise = new Promise(res => { this._readyResolve = res; } );
+  setZone(zone: NgZone) {
+    this._zone = zone;
   }
 
 
@@ -53,7 +60,6 @@ export class Platform {
   // **********************************************
 
   /**
-   * @param {string} platformName
    * @returns {boolean} returns true/false based on platform.
    * @description
    * Depending on the platform the user is on, `is(platformName)` will
@@ -62,36 +68,39 @@ export class Platform {
    * an iPad would return `true` for the platform names: `mobile`,
    * `ios`, `ipad`, and `tablet`. Additionally, if the app was running
    * from Cordova then `cordova` would be true, and if it was running
-   * from a web browser on the iPad then then `mobileweb` would also
-   * be `true`.
-   *
-   * Possible built-in platform names:
-   *
-   * - `android`
-   * - `cordova`
-   * - `core`
-   * - `ios`
-   * - `ipad`
-   * - `iphone`
-   * - `mobile`
-   * - `mobileweb`
-   * - `phablet`
-   * - `tablet`
-   * - `windows`
+   * from a web browser on the iPad then `mobileweb` would be `true`.
    *
    * ```
    * import {Platform} from 'ionic-angular';
    *
    * @Page({...})
    * export MyPage {
-   *    constructor(platform: Platform) {
-   *      if (platform.is('ios')) {
-   *        // what ever you need to do
-   *        // if the platform is ios
-   *      }
-   *    }
+   *   constructor(platform: Platform) {
+   *     this.platform = platform;
+   *
+   *     if (this.platform.is('ios')) {
+   *       // This will only print when on ios
+   *       console.log("I'm an ios device!");
+   *     }
+   *   }
    * }
    * ```
+   *
+   * | Platform Name   | Description                        |
+   * |-----------------|------------------------------------|
+   * | android         | on a device running Android.       |
+   * | cordova         | on a device running Cordova.       |
+   * | core            | on a desktop device.               |
+   * | ios             | on a device running iOS.           |
+   * | ipad            | on an iPad device.                 |
+   * | iphone          | on an iPhone device.               |
+   * | mobile          | on a mobile device.                |
+   * | mobileweb       | in a browser on a mobile device.   |
+   * | phablet         | on a phablet device.               |
+   * | tablet          | on a tablet device.                |
+   * | windows         | on a device running Windows.       |
+   *
+   * @param {string} platformName
    */
   is(platformName: string): boolean {
     return (this._platforms.indexOf(platformName) > -1);
@@ -102,17 +111,19 @@ export class Platform {
    * @description
    * Depending on what device you are on, `platforms` can return multiple values.
    * Each possible value is a hierarchy of platforms. For example, on an iPhone,
-   * it would return mobile, ios, and iphone.
+   * it would return `mobile`, `ios`, and `iphone`.
    *
    * ```
    * import {Platform} from 'ionic-angular';
+   *
+   * @Page({...})
    * export MyPage {
-   *    constructor(platform: Platform) {
-   *      this.platform = platform;
-   *      console.log(this.platform.platforms());
-   *      // This will return an array of all the availble platforms
-   *      // From if your on mobile, to mobile os, and device name
-   *    }
+   *   constructor(platform: Platform) {
+   *     this.platform = platform;
+   *
+   *     // This will print an array of the current platforms
+   *     console.log(this.platform.platforms());
+   *   }
    * }
    * ```
    */
@@ -124,30 +135,26 @@ export class Platform {
 
 
   /**
-   * Returns an object containing information about the paltform
+   * Returns an object containing version information about all of the platforms.
    *
    * ```
    * import {Platform} from 'ionic-angular';
    *
    * @Page({...})
    * export MyPage {
-   *    constructor(platform: Platform) {
-   *      this.platform = platform;
-   *      console.log(this.platform.versions());
-   *    }
+   *   constructor(platform: Platform) {
+   *     this.platform = platform;
+   *
+   *     // This will print an object containing
+   *     // all of the platforms and their versions
+   *     console.log(platform.versions());
+   *   }
    * }
    * ```
-
-   * @param {string} [platformName] optional platformName
-   * @returns {object} An object with various platform info
    *
+   * @returns {object} An object containing all of the platforms and their versions.
    */
-  versions(platformName: string): any {
-    if (arguments.length) {
-      // get a specific platform's version
-      return this._versions[platformName];
-    }
-
+  versions(): {[name: string]: PlatformVersion} {
     // get all the platforms that have a valid parsed version
     return this._versions;
   }
@@ -155,7 +162,7 @@ export class Platform {
   /**
    * @private
    */
-  version(): any {
+  version(): PlatformVersion {
     for (let platformName in this._versions) {
       if (this._versions[platformName]) {
         return this._versions[platformName];
@@ -165,47 +172,62 @@ export class Platform {
   }
 
   /**
-   * Returns a promise when the platform is ready and native functionality can be called
+   * Returns a promise when the platform is ready and native functionality
+   * can be called. If the app is running from within a web browser, then
+   * the promise will resolve when the DOM is ready. When the app is running
+   * from an application engine such as Cordova, then the promise will
+   * resolve when Cordova triggers the `deviceready` event.
+   *
+   * The resolved value is the `readySource`, which states which platform
+   * ready was used. For example, when Cordova is ready, the resolved ready
+   * source is `cordova`. The default ready source value will be `dom`. The
+   * `readySource` is useful if different logic should run depending on the
+   * platform the app is running from. For example, only Cordova can execute
+   * the status bar plugin, so the web should not run status bar plugin logic.
    *
    * ```
-   * import {Platform} from 'ionic-angular';
+   * import {App, Platform} from 'ionic-angular';
    *
-   * @Page({...})
-   * export MyPage {
-   *    constructor(platform: Platform) {
-   *      this.platform = platform;
-   *      this.platform.ready().then(() => {
-   *        console.log('Platform ready');
-   *        // The platform is now ready, execute any native code you want
-   *       });
-   *    }
+   * @App({...})
+   * export MyApp {
+   *   constructor(platform: Platform) {
+   *     platform.ready().then((readySource) => {
+   *       console.log('Platform ready from', readySource);
+   *       // Platform now ready, execute any required native code
+   *     });
+   *   }
    * }
    * ```
-   * @returns {promise} Returns a promsie when device ready has fired
+   * @returns {promise}
    */
-  ready(): Promise<any> {
+  ready(): Promise<string> {
     return this._readyPromise;
   }
 
   /**
    * @private
+   * This should be triggered by the engine when the platform is
+   * ready. If there was no custom prepareReady method from the engine,
+   * such as Cordova or Electron, then it uses the default DOM ready.
    */
-  prepareReady(config: Config) {
-    let self = this;
+  triggerReady(readySource: string) {
+    this._zone.run(() => {
+      this._readyResolve(readySource);
+    });
+  }
 
-    function resolve() {
-      self._readyResolve(config);
-    }
-
-    if (this._engineReady) {
-      // the engine provide a ready promise, use this instead
-      this._engineReady(resolve);
-
-    } else {
-      // there is no custom ready method from the engine
-      // use the default dom ready
-      ready(resolve);
-    }
+  /**
+   * @private
+   * This is the default prepareReady if it's not replaced by an engine,
+   * such as Cordova or Electron. If there was no custom prepareReady
+   * method from an engine then it uses the method below, which triggers
+   * the platform ready on the DOM ready event, and the default resolved
+   * value is `dom`.
+   */
+  prepareReady() {
+    ready(() => {
+      this.triggerReady('dom');
+    });
   }
 
   /**
@@ -276,31 +298,44 @@ export class Platform {
   // Methods meant to be overridden by the engine
   // **********************************************
   // Provided NOOP methods so they do not error when
-  // called by engines (the browser) doesn't provide them
+  // called by engines (the browser)that do not provide them
+
   /**
-  * @private
-  */
-  on() {}
-  /**
-  * @private
-  */
-  onHardwareBackButton() {}
-  /**
-  * @private
-  */
-  registerBackButtonAction() {}
-  /**
-  * @private
+  * The `exitApp` method is useful when running from a native platform,
+  * such as Cordova. This adds the ability to place the Cordova app
+  * in the background.
   */
   exitApp() {}
+
+  // Events meant to be triggered by the engine
+  // **********************************************
+
   /**
-  * @private
+  * The back button event is emitted when the user presses the native
+  * platform's back button, also referred to as the "hardware" back button.
+  * This event is only emitted within Cordova apps running on Android and
+  * Windows platforms. This event is not fired on iOS since iOS doesn't come
+  * with a hardware back button in the same sense an Android or Windows device
+  * does. It's important to note that this event does not emit when the Ionic
+  * app's back button within the navbar is clicked, but this event is only
+  * referencing the platform's hardward back button.
   */
-  fullScreen() {}
+  backButton: EventEmitter<any> = new EventEmitter();
+
   /**
-  * @private
+  * The pause event emits when the native platform puts the application
+  * into the background, typically when the user switches to a different
+  * application. This event would emit when a Cordova app is put into
+  * the background, however, it would not fire on a standard web browser.
   */
-  showStatusBar() {}
+  pause: EventEmitter<any> = new EventEmitter();
+
+  /**
+  * The resume event emits when the native platform pulls the application
+  * out from the background. This event would emit when a Cordova app comes
+  * out from the background, however, it would not fire on a standard web browser.
+  */
+  resume: EventEmitter<any> = new EventEmitter();
 
 
   // Getter/Setter Methods
@@ -427,21 +462,21 @@ export class Platform {
   /**
    * @private
    */
-  static register(platformConfig) {
+  static register(platformConfig: PlatformConfig) {
     platformRegistry[platformConfig.name] = platformConfig;
   }
 
   /**
   * @private
   */
-  static registry(): any {
+  static registry() {
     return platformRegistry;
   }
 
   /**
    * @private
    */
-  static get(platformName: string): any {
+  static get(platformName: string): PlatformConfig {
     return platformRegistry[platformName] || {};
   }
 
@@ -513,15 +548,13 @@ export class Platform {
   /**
    * @private
    */
-  load(platformOverride?: string) {
-    let rootPlatformNode = null;
-    let engineNode = null;
+  load(config: Config) {
+    let rootPlatformNode: PlatformNode;
+    let enginePlatformNode: PlatformNode;
     let self = this;
 
-    this.platformOverride = platformOverride;
-
     // figure out the most specific platform and active engine
-    let tmpPlatform = null;
+    let tmpPlatform: PlatformNode;
     for (let platformName in platformRegistry) {
 
       tmpPlatform = this.matchPlatform(platformName);
@@ -532,7 +565,7 @@ export class Platform {
         if (tmpPlatform.isEngine) {
           // because it matched then this should be the active engine
           // you cannot have more than one active engine
-          engineNode = tmpPlatform;
+          enginePlatformNode = tmpPlatform;
 
         } else if (!rootPlatformNode || tmpPlatform.depth > rootPlatformNode.depth) {
           // only find the root node for platforms that are not engines
@@ -553,20 +586,13 @@ export class Platform {
     if (rootPlatformNode) {
 
       // check if we found an engine node (cordova/node-webkit/etc)
-      if (engineNode) {
+      if (enginePlatformNode) {
         // add the engine to the first in the platform hierarchy
         // the original rootPlatformNode now becomes a child
         // of the engineNode, which is not the new root
-        engineNode.child = rootPlatformNode;
-        rootPlatformNode.parent = engineNode;
-        rootPlatformNode = engineNode;
-
-        // add any events which the engine would provide
-        // for example, Cordova provides its own ready event
-        let engineMethods = engineNode.methods();
-        engineMethods._engineReady = engineMethods.ready;
-        delete engineMethods.ready;
-        assign(this, engineMethods);
+        enginePlatformNode.child = rootPlatformNode;
+        rootPlatformNode.parent = enginePlatformNode;
+        rootPlatformNode = enginePlatformNode;
       }
 
       let platformNode = rootPlatformNode;
@@ -585,12 +611,14 @@ export class Platform {
 
       platformNode = rootPlatformNode;
       while (platformNode) {
+        platformNode.initialize(this, config);
+
         // set the array of active platforms with
         // the last one in the array the most important
-        this._platforms.push(platformNode.name());
+        this._platforms.push(platformNode.name);
 
         // get the platforms version if a version parser was provided
-        this._versions[platformNode.name()] = platformNode.version(this);
+        this._versions[platformNode.name] = platformNode.version(this);
 
         // go to the next platform child
         platformNode = platformNode.child;
@@ -605,7 +633,7 @@ export class Platform {
   /**
    * @private
    */
-  matchPlatform(platformName: string): any {
+  private matchPlatform(platformName: string): PlatformNode {
     // build a PlatformNode and assign config data to it
     // use it's getRoot method to build up its hierarchy
     // depending on which platforms match
@@ -640,22 +668,22 @@ function insertSuperset(platformNode: PlatformNode) {
   }
 }
 
-
+/**
+ * @private
+ */
 class PlatformNode {
-  private c;
+  private c: PlatformConfig;
 
   parent: PlatformNode;
   child: PlatformNode;
+  name: string;
   isEngine: boolean;
   depth: number;
 
   constructor(platformName: string) {
     this.c = Platform.get(platformName);
+    this.name = platformName;
     this.isEngine = this.c.isEngine;
-  }
-
-  name(): string {
-    return this.c.name;
   }
 
   settings(): any {
@@ -666,22 +694,15 @@ class PlatformNode {
     return this.c.superset;
   }
 
-  methods(): any {
-    return this.c.methods || {};
-  }
-
   isMatch(p: Platform): boolean {
-    if (p.platformOverride && !this.isEngine) {
-      return (p.platformOverride === this.c.name);
-
-    } else if (!this.c.isMatch) {
-      return false;
-    }
-
-    return this.c.isMatch(p);
+    return this.c.isMatch && this.c.isMatch(p) || false;
   }
 
-  version(p: Platform): any {
+  initialize(platform: Platform, config: Config) {
+    this.c.initialize && this.c.initialize(platform, config);
+  }
+
+  version(p: Platform): PlatformVersion {
     if (this.c.versionParser) {
       let v = this.c.versionParser(p);
       if (v) {
@@ -699,7 +720,7 @@ class PlatformNode {
   getRoot(p: Platform): PlatformNode {
     if (this.isMatch(p)) {
 
-      let parents = this.getSubsetParents(this.name());
+      let parents = this.getSubsetParents(this.name);
 
       if (!parents.length) {
         return this;
@@ -742,5 +763,23 @@ class PlatformNode {
 
 }
 
-let platformRegistry = {};
-let platformDefault = null;
+let platformRegistry: {[name: string]: PlatformConfig} = {};
+let platformDefault: string = null;
+
+export interface PlatformConfig {
+  name?: string;
+  isEngine?: boolean;
+  initialize?: Function;
+  isMatch?: Function;
+  superset?: string;
+  subsets?: string[];
+  settings?: any;
+  versionParser?: any;
+}
+
+export interface PlatformVersion {
+  str?: string;
+  num?: number;
+  major?: number;
+  minor?: number;
+}

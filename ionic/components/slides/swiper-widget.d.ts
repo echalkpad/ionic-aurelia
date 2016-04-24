@@ -1,12 +1,13 @@
+
 export declare class Swiper {
   constructor(container: HTMLElement, params: any);
   slides: Array<HTMLElement>;
   activeIndex: number;
+  previousIndex: number;
   isEnd: boolean;
   isBeginning: boolean;
-
-  update():any;
-  slideNext():any;
-  slidePrev():any;
-
+  update(): any;
+  slideNext(runCallbacks: boolean, speed: number);
+  slidePrev(runCallbacks: boolean, speed: number);
+  slideTo(slideIndex: number, speed: number, runCallbacks: boolean);
 }

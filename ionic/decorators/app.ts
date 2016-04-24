@@ -1,11 +1,9 @@
-import {Component, ChangeDetectionStrategy, ViewEncapsulation, enableProdMode, Type} from 'angular2/core';
+import {Component, ChangeDetectionStrategy, ViewEncapsulation, enableProdMode, Type, provide, PLATFORM_DIRECTIVES} from 'angular2/core';
 import {bootstrap} from 'angular2/platform/browser';
-import {IonicApp} from '../components/app/app';
-import {TapClick} from '../components/tap-click/tap-click';
-import {ionicProviders} from '../config/bootstrap';
+import {ionicProviders, postBootstrap} from '../config/bootstrap';
 import {IONIC_DIRECTIVES} from '../config/directives';
 
-const _reflect: any=Reflect;
+const _reflect: any = Reflect;
 
 export interface AppMetadata {
   prodMode?: boolean;
@@ -41,7 +39,11 @@ export interface AppMetadata {
 * number of arguments that act as global config variables for the app.
 * `@App` is similar to Angular's `@Component` in which it can accept a `template`
 * property that has an inline template, or a `templateUrl` property that points
-* to an external html template.
+* to an external html template. The `@App` decorator runs the Angular bootstrapping
+* process automatically, however you can bootstrap your app separately if you prefer.
+* Additionally, `@App` will automatically bootstrap with all of Ionic's
+* core components, meaning they won't all have to be individually imported and added
+* to each component's `directives` property.
 *
 * @usage
 * ```ts
@@ -64,16 +66,13 @@ export interface AppMetadata {
 * @property {string} [template] - the template to use for the app root.
 * @property {string} [templateUrl] - a relative URL pointing to the template to use for the app root.
 */
-export function App(args: AppMetadata={}) {
+export function App(args: AppMetadata = {}) {
 
   return function(cls) {
     // get current annotations
     let annotations = _reflect.getMetadata('annotations', cls) || [];
 
     args.selector = 'ion-app';
-
-    // auto add Ionic directives
-    args.directives = args.directives ? args.directives.concat(IONIC_DIRECTIVES) : IONIC_DIRECTIVES;
 
     // if no template was provided, default so it has a root <ion-nav>
     if (!args.templateUrl && !args.template) {
@@ -89,16 +88,20 @@ export function App(args: AppMetadata={}) {
     // define array of bootstrap providers
     let providers = ionicProviders(args).concat(args.providers || []);
 
+    // auto add Ionic directives
+    let directives = args.directives ? args.directives.concat(IONIC_DIRECTIVES) : IONIC_DIRECTIVES;
+
+    // automatically provide all of Ionic's directives to every component
+    providers.push(provide(PLATFORM_DIRECTIVES, {useValue: [directives], multi: true}));
+
     if (args.prodMode) {
       enableProdMode();
     }
 
     bootstrap(cls, providers).then(appRef => {
-      appRef.injector.get(TapClick);
-      let app: IonicApp = appRef.injector.get(IonicApp);
-      app.setProd(args.prodMode);
+      postBootstrap(appRef, args.prodMode);
     });
 
     return cls;
-  }
+  };
 }

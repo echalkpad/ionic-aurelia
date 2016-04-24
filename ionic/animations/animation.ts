@@ -1,4 +1,4 @@
-import {CSS, rafFrames, transitionEnd} from '../util/dom';
+import {CSS, rafFrames, transitionEnd, nativeTimeout} from '../util/dom';
 import {assign, isDefined} from '../util/util';
 
 
@@ -179,7 +179,7 @@ export class Animation {
       if (!isNaN(num)) {
         fxState.num = num;
       }
-      fxState.unit = (r[0] != r[2] ? r[2] : '');
+      fxState.unit = (r[0] !== r[2] ? r[2] : '');
 
     } else if (typeof val === 'number') {
       fxState.num = val;
@@ -216,7 +216,7 @@ export class Animation {
         }
         return this;
       }
-    }
+    };
   }
 
   get after() {
@@ -239,7 +239,7 @@ export class Animation {
         }
         return this;
       }
-    }
+    };
   }
 
   play(opts: PlayOptions = {}) {
@@ -406,7 +406,7 @@ export class Animation {
 
     // set a fallback timeout if the transition end event never fires, or is too slow
     // transition end fallback: (animation duration + XXms)
-    self._tmr = setTimeout(onTransitionFallback, duration + 400);
+    self._tmr = nativeTimeout(onTransitionFallback, duration + 400);
   }
 
   _clearAsync() {
@@ -818,10 +818,10 @@ interface EffectState {
 }
 
 const TRANSFORMS = {
-  'translateX':1, 'translateY':1, 'translateZ':1,
-  'scale':1, 'scaleX':1, 'scaleY':1, 'scaleZ':1,
-  'rotate':1, 'rotateX':1, 'rotateY':1, 'rotateZ':1,
-  'skewX':1, 'skewY':1, 'perspective':1
+  'translateX': 1, 'translateY': 1, 'translateZ': 1,
+  'scale': 1, 'scaleX': 1, 'scaleY': 1, 'scaleZ': 1,
+  'rotate': 1, 'rotateX': 1, 'rotateY': 1, 'rotateZ': 1,
+  'skewX': 1, 'skewY': 1, 'perspective': 1
 };
 
 const CSS_VALUE_REGEX = /(^-?\d*\.?\d*)(.*)/;

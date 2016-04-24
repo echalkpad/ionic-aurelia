@@ -1,10 +1,11 @@
-import {Component, ElementRef, Input, Optional, NgZone, Compiler, AppViewManager, Renderer, Type} from 'angular2/core';
+import {Component, ElementRef, Input, Optional, NgZone, Compiler, AppViewManager, Renderer, Type, ViewChild, ViewEncapsulation} from 'angular2/core';
 
 import {IonicApp} from '../app/app';
 import {Config} from '../../config/config';
 import {Keyboard} from '../../util/keyboard';
 import {isTrueProperty} from '../../util/util';
 import {NavController} from './nav-controller';
+import {Portal} from './nav-portal';
 import {ViewController} from './view-controller';
 
 /**
@@ -19,7 +20,7 @@ import {ViewController} from './view-controller';
  * Nav automatically animates transitions between pages for you.
  *
  * For more information on using navigation controllers like Nav or [Tab](../../Tabs/Tab/),
- * take a look at the [NavController API reference](../NavController/).
+ * take a look at the [NavController API Docs](../NavController/).
  *
  * You must set a root page (where page is any [@Page](../../config/Page/)
  * component) to be loaded initially by any Nav you create, using
@@ -104,14 +105,16 @@ import {ViewController} from './view-controller';
  */
 @Component({
   selector: 'ion-nav',
-  template: '<div #contents></div>'
+  template: '<div #contents></div><div portal></div>',
+  directives: [Portal],
+  encapsulation: ViewEncapsulation.None,
 })
 export class Nav extends NavController {
   private _root: Type;
   private _hasInit: boolean = false;
 
   constructor(
-    @Optional() hostNavCtrl: NavController,
+    @Optional() parent: NavController,
     @Optional() viewCtrl: ViewController,
     app: IonicApp,
     config: Config,
@@ -122,13 +125,22 @@ export class Nav extends NavController {
     zone: NgZone,
     renderer: Renderer
   ) {
-    super(hostNavCtrl, app, config, keyboard, elementRef, 'contents', compiler, viewManager, zone, renderer);
+    super(parent, app, config, keyboard, elementRef, 'contents', compiler, viewManager, zone, renderer);
 
     if (viewCtrl) {
       // an ion-nav can also act as an ion-page within a parent ion-nav
       // this would happen when an ion-nav nests a child ion-nav.
       viewCtrl.setContent(this);
       viewCtrl.setContentRef(elementRef);
+    }
+
+    if (parent) {
+      // this Nav has a parent Nav
+      parent.registerChildNav(this);
+
+    } else if (app) {
+      // this is the root navcontroller for the entire app
+      this._app.setRootNav(this);
     }
   }
 
@@ -173,4 +185,8 @@ export class Nav extends NavController {
     }
   }
 
+  @ViewChild(Portal)
+  private set _navPortal(val: Portal) {
+    this.setPortal(val);
+  }
 }

@@ -1,4 +1,4 @@
-import {Component, ElementRef} from 'angular2/core';
+import {Component, ElementRef, ChangeDetectionStrategy, ViewEncapsulation} from 'angular2/core';
 
 import {Ion} from '../ion';
 import {Gesture} from '../../gestures/gesture';
@@ -42,7 +42,9 @@ import * as util from '../../util';
       '<div class="scroll-zoom-wrapper">' +
         '<ng-content></ng-content>' +
       '</div>' +
-    '</scroll-content>'
+    '</scroll-content>',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
 })
 export class Scroll extends Ion {
   /**
@@ -77,13 +79,13 @@ export class Scroll extends Ion {
    * undefined if the scroll element doesn't exist.
    */
   addScrollEventListener(handler) {
-    if(!this.scrollElement) { return; }
+    if (!this.scrollElement) { return; }
 
     this.scrollElement.addEventListener('scroll', handler);
 
     return () => {
       this.scrollElement.removeEventListener('scroll', handler);
-    }
+    };
   }
 
 }

@@ -91,7 +91,7 @@ class ToolbarBackground {
   selector: 'ion-navbar',
   template:
     '<div class="toolbar-background"></div>' +
-    '<button class="back-button bar-button bar-button-default" [hidden]="_hideBb">' +
+    '<button category="bar-button" class="back-button" [hidden]="_hideBb">' +
       '<span class="button-inner">' +
         '<ion-icon class="back-button-icon" [name]="_bbIcon"></ion-icon>' +
         '<span class="back-button-text">' +
@@ -108,7 +108,8 @@ class ToolbarBackground {
     '</div>',
   host: {
     '[hidden]': '_hidden',
-    'class': 'toolbar'
+    'class': 'toolbar',
+    '[class.statusbar-padding]': '_sbPadding'
   },
   directives: [BackButton, BackButtonText, Icon, ToolbarBackground]
 })
@@ -120,6 +121,7 @@ export class Navbar extends ToolbarBase {
   private _bbRef: ElementRef;
   private _bbtRef: ElementRef;
   private _bgRef: ElementRef;
+  private _sbPadding: boolean;
 
   /**
    * @input {boolean} whether the back button should be shown or not
@@ -145,6 +147,7 @@ export class Navbar extends ToolbarBase {
 
     this._bbIcon = config.get('backButtonIcon');
     this._bbText = config.get('backButtonText');
+    this._sbPadding = config.getBoolean('statusbarPadding', false);
   }
 
   /**
@@ -202,7 +205,7 @@ export class Navbar extends ToolbarBase {
   didEnter() {
     try {
       this._app.setTitle(this.getTitleText());
-    } catch(e) {
+    } catch (e) {
       console.error(e);
     }
   }

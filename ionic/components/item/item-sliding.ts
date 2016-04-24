@@ -30,8 +30,7 @@ import {List} from '../list/list';
 @customElement('ion-item-sliding')
 @inlineView(
   '<template>' +
-    '<ng-content select="ion-item,[ion-item]"></ng-content>' +
-    '<ng-content select="ion-item-options"></ng-content>' +
+    '<content select="ion-item-options"></content>' +
   '</template>'
 )
 @inject(Optional.of(List), Element)

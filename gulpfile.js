@@ -250,8 +250,14 @@ gulp.task('transpile', function(){
 
   var tscOpts = getTscOptions(TYPECHECK ? 'typecheck' : undefined);
   var tsResult = tsCompile(tscOpts, 'transpile')
+    .on('error', function(err) {
+      console.log(err.message);
+    });
 
   if (TYPECHECK) {
+    tsResult.on('error', function(err) {
+      process.exit(1);
+    });
     var merge = require('merge2');
     var js = tsResult.js;
     var dts = tsResult.dts;
@@ -280,10 +286,7 @@ function tsCompile(options, cacheName){
       'ionic/components/nav/nav-registry.ts'
     ])
     .pipe(cache(cacheName, { optimizeMemory: true }))
-    .pipe(tsc(options, undefined, tscReporter))
-    .on('error', function(error) {
-      console.log(error.message);
-    });
+    .pipe(tsc(options, undefined, tscReporter));
 }
 
 /**
@@ -391,6 +394,21 @@ gulp.task('bundle.aurelia', function() {
     .pipe(babel(getBabelOptions()))
     .pipe(concat('aurelia-framework.js'))
     .pipe(gulp.dest('dist/js'));
+});
+
+/**
+ * Lint the scss files using a ruby gem
+ */
+gulp.task('lint.scss', function() {
+  var scsslint = require('gulp-scss-lint');
+
+  return gulp.src([
+      'ionic/**/*.scss',
+      '!ionic/components/*/test/**/*',
+      '!ionic/util/test/*'
+    ])
+    .pipe(scsslint())
+    .pipe(scsslint.failReporter());
 });
 
 /**
@@ -752,9 +770,16 @@ function buildDemoSass(isProductionMode) {
 require('./scripts/snapshot/snapshot.task')(gulp, argv, buildConfig);
 
 // requires bundle.system to be run once
-gulp.task('karma', ['tests'], function() {
+gulp.task('karma', ['tests'], function(done) {
   var karma = require('karma').server;
-  return karma.start({ configFile: __dirname + '/scripts/karma/karma.conf.js' })
+  karma.start({
+    configFile: __dirname + '/scripts/karma/karma.conf.js'
+  }, function(result) {
+    if (result > 0) {
+      return done(new Error('Karma exited with an error'));
+    }
+    done();
+  });
 });
 
 gulp.task('karma-watch', ['watch.tests', 'bundle.system'], function() {
@@ -773,8 +798,13 @@ gulp.task('karma-watch', ['watch.tests', 'bundle.system'], function() {
   * some prerelease magic (see 'prepare') and copies npm package and tooling
   * files to dist.
   */
-gulp.task('prerelease', ['prepare', 'build.release'], function(done){
-  runSequence('package', done);
+gulp.task('prerelease', function(done){
+  runSequence(
+    'validate',
+    'prepare',
+    'package',
+    done
+  );
 });
 
 /**
@@ -786,25 +816,10 @@ gulp.task('release', ['publish.npm', 'publish.github']);
  * Pulls latest, ensures there are no unstaged/uncommitted changes, updates
  * package.json minor version and generates CHANGELOG for release.
  */
-gulp.task('prepare', function(){
-  var execSync = require('child_process').execSync;
-  var spawnSync = require('child_process').spawnSync;
+gulp.task('prepare', ['git-pull-latest'], function(){
   var semver = require('semver');
   var fs = require('fs');
   var changelog = require('gulp-conventional-changelog');
-  var self = this;
-
-  //Check for uncommitted changes
-  var gitStatusResult = execSync('git status --porcelain');
-  if (gitStatusResult.toString().length > 0) {
-    return fail('You have uncommitted changes, please stash or commit them before running prepare');
-  }
-
-  //Pull latest
-  var gitPullResult = spawnSync('git', ['pull', 'origin', '2.0']);
-  if (gitPullResult.status !== 0) {
-    fail('There was an error running \'git pull\':\n' + gitPullResult.stderr.toString());
-  }
 
   //Update package.json version
   var packageJSON = require('./package.json');
@@ -817,15 +832,31 @@ gulp.task('prepare', function(){
       preset: 'angular'
     }))
     .pipe(gulp.dest('./'));
+});
 
 
-  function fail(msg) {
+gulp.task('git-pull-latest', function() {
+  var execSync = require('child_process').execSync;
+  var spawnSync = require('child_process').spawnSync;
+
+  function fail(context, msg) {
     // remove gulp's 'Finished 'task' after 10ms' message
-    self.removeAllListeners('task_stop');
+    context.removeAllListeners('task_stop');
     console.error('Prepare aborted.');
     console.error(msg);
   }
 
+  //Check for uncommitted changes
+  var gitStatusResult = execSync('git status --porcelain');
+  if (gitStatusResult.toString().length > 0) {
+    return fail(this, 'You have uncommitted changes, please stash or commit them before running prepare');
+  }
+
+  //Pull latest
+  var gitPullResult = spawnSync('git', ['pull', 'origin', '2.0']);
+  if (gitPullResult.status !== 0) {
+    fail('There was an error running \'git pull\':\n' + gitPullResult.stderr.toString());
+  }
 });
 
 /**
@@ -907,6 +938,62 @@ gulp.task('publish.npm', function(done) {
 });
 
 /**
+ * Execute this task to validate current code and then
+ */
+gulp.task('publish.nightly', function(done){
+  runSequence('git-pull-latest', 'validate', 'nightly', done);
+});
+
+/**
+ * Publishes a new tag to npm with a nightly tag.
+ * This will only update the dist package.json file.
+ */
+gulp.task('nightly', ['package'], function(done) {
+  var fs = require('fs');
+  var spawn = require('child_process').spawn;
+  var packageJSON = require('./dist/package.json');
+  var hashLength = 8;
+
+  // Generate a unique id formatted from current timestamp
+  function createTimestamp() {
+    // YYYYMMDDHHMM
+    var d = new Date();
+    return d.getUTCFullYear() + // YYYY
+           ('0' + (d.getUTCMonth() +　1)).slice(-2) + // MM
+           ('0' + (d.getUTCDate())).slice(-2) + // DD
+           ('0' + (d.getUTCHours())).slice(-2) + // HH
+           ('0' + (d.getUTCMinutes())).slice(-2); // MM
+  }
+
+  /**
+   * Split the version on dash so that we can add nightly
+   * to all production, beta, and nightly releases
+   * 0.1.0                  -becomes-  0.1.0-r8e7684t
+   * 0.1.0-beta.0           -becomes-  0.1.0-beta.0-r8e7684t
+   * 0.1.0-beta.0-t5678e3v  -becomes-  0.1.0-beta.0-r8e7684t
+   */
+  packageJSON.version = packageJSON.version.split('-')
+    .slice(0, 2)
+    .concat(createTimestamp())
+    .join('-');
+
+  fs.writeFileSync('./dist/package.json', JSON.stringify(packageJSON, null, 2));
+
+  var npmCmd = spawn('npm', ['publish', '--tag=nightly', './dist']);
+  npmCmd.stdout.on('data', function (data) {
+    console.log(data.toString());
+  });
+
+  npmCmd.stderr.on('data', function (data) {
+    console.log('npm err: ' + data.toString());
+  });
+
+  npmCmd.on('close', function() {
+    done();
+  });
+});
+
+/**
  * Build Ionic sources, with typechecking, .d.ts definition generation and debug
  * statements removed.
  */
@@ -938,4 +1025,31 @@ gulp.task('tooling', function(){
     gulp.src('*tooling/**/*')
       .pipe(gulp.dest('dist'));
   })
+});
+
+/**
+ * Validate Task
+ * - This task
+ */
+gulp.task('validate', function(done) {
+  runSequence(
+    'lint.scss',
+    'tslint',
+    'build.release',
+    'karma',
+    done
+  );
+});
+
+
+/**
+ * TS LINT
+ */
+gulp.task('tslint', function() {
+  var tslint = require('gulp-tslint');
+  return gulp.src([
+      'ionic/**/*.ts',
+      '!ionic/**/test/**/*',
+    ]).pipe(tslint())
+      .pipe(tslint.report('verbose'));
 });

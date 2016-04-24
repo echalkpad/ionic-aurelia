@@ -6,9 +6,10 @@ import {Keyboard} from '../util/keyboard';
 import {NavRegistry} from '../components/nav/nav-registry';
 import {Platform} from '../platform/platform';
 import {ready, closest} from '../util/dom';
-import {ScrollTo} from '../animations/scroll-to';
+import {ScrollView} from '../util/scroll-view';
 import {TapClick} from '../components/tap-click/tap-click';
 import {Translate} from '../translation/translate';
+import {IonicApp} from '../components/app/app';
 
 /**
  * @private
@@ -26,7 +27,7 @@ export function bootstrap(args: any={}) {
   platform.setUrl(window.location.href);
   platform.setUserAgent(window.navigator.userAgent);
   platform.setNavigatorPlatform(window.navigator.platform);
-  platform.load();
+  platform.load(config);
   config.setPlatform(platform);
 
   let clickBlock = new ClickBlock();
@@ -37,19 +38,25 @@ export function bootstrap(args: any={}) {
   setupDom(window, document, config, platform, clickBlock, featureDetect);
   bindEvents(window, document, platform, events);
 
-  // prepare the ready promise to fire....when ready
-  platform.prepareReady(config);
-
   return [
     clickBlock,
     platform,
-    clickBlock,
     navRegistry,
     events,
     config
   ];
 }
 
+/**
+ * @private
+ */
+export function postBootstrap(appRef: any) {
+  appRef.injector.get(TapClick);
+  let app: IonicApp = appRef.injector.get(IonicApp);
+  let platform: Platform = appRef.injector.get(Platform);
+  platform.prepareReady();
+  app.setAppInjector(appRef.injector);
+}
 
 function setupDom(window, document, config, platform, clickBlock, featureDetect) {
   let bodyEle = document.body;
@@ -128,8 +135,8 @@ function bindEvents(window, document, platform, events) {
 
     var content = closest(el, 'scroll-content');
     if (content) {
-      var scrollTo = new ScrollTo(content);
-      scrollTo.start(0, 0, 300, 0);
+      var scroll = new ScrollView(content);
+      scroll.scrollTo(0, 0, 300);
     }
   });
 

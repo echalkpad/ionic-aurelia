@@ -586,7 +586,7 @@ export function run() {
 
     describe('_setZIndex', () => {
 
-      it('should set zIndex off of the previous view to the entering view  is loaded and the leavingView is not loaded', () => {
+      it('should set zIndex off of the previous view to the entering view is loaded and the leavingView is not loaded', () => {
         let leavingView = new ViewController();
         leavingView.zIndex = 100;
         leavingView._loaded = true;
@@ -636,6 +636,81 @@ export function run() {
         enteringView.setPageRef({});
         nav._setZIndex(enteringView, leavingView, 'back');
         expect(enteringView.zIndex).toEqual(0);
+      });
+
+      it('should set zIndex 9999 on first entering portal view', () => {
+        let enteringView = new ViewController();
+        enteringView.setPageRef({});
+        nav.isPortal = true;
+        nav._setZIndex(enteringView, null, 'forward');
+        expect(enteringView.zIndex).toEqual(9999);
+      });
+
+      it('should set zIndex 10000 on second entering portal view', () => {
+        let leavingView = new ViewController();
+        leavingView.zIndex = 9999;
+        leavingView._loaded = true;
+        let enteringView = new ViewController();
+        enteringView.setPageRef({});
+        nav._portal = null;
+        nav._setZIndex(enteringView, leavingView, 'forward');
+        expect(enteringView.zIndex).toEqual(10000);
+      });
+
+      it('should set zIndex 9999 on entering portal view going back', () => {
+        let leavingView = new ViewController();
+        leavingView.zIndex = 10000;
+        leavingView._loaded = true;
+        let enteringView = new ViewController();
+        enteringView.setPageRef({});
+        nav._portal = null;
+        nav._setZIndex(enteringView, leavingView, 'back');
+        expect(enteringView.zIndex).toEqual(9999);
+      });
+
+    });
+
+    describe('_setAnimate', () => {
+
+      it('should be unchanged when the nav is a portal', () => {
+        nav._views = [new ViewController()];
+        nav._init = false;
+        nav.isPortal = true;
+        let opts: NavOptions = {};
+        nav._setAnimate(opts);
+        expect(opts.animate).toBeUndefined();
+      });
+
+      it('should not animate when theres only 1 view, and nav hasnt initialized yet', () => {
+        nav._views = [new ViewController()];
+        nav._init = false;
+        let opts: NavOptions = {};
+        nav._setAnimate(opts);
+        expect(opts.animate).toEqual(false);
+      });
+
+      it('should be unchanged when theres only 1 view, and nav has already initialized', () => {
+        nav._views = [new ViewController()];
+        nav._init = true;
+        let opts: NavOptions = {};
+        nav._setAnimate(opts);
+        expect(opts.animate).toBeUndefined();
+      });
+
+      it('should not animate with config animate = false, and has initialized', () => {
+        config.set('animate', false);
+        nav._init = true;
+        let opts: NavOptions = {};
+        nav._setAnimate(opts);
+        expect(opts.animate).toEqual(false);
+      });
+
+      it('should not animate with config animate = false, and has not initialized', () => {
+        config.set('animate', false);
+        nav._init = false;
+        let opts: NavOptions = {};
+        nav._setAnimate(opts);
+        expect(opts.animate).toEqual(false);
       });
 
     });
@@ -1098,6 +1173,34 @@ export function run() {
 
     });
 
+    describe('present', () => {
+
+      it('should present in portal', () => {
+        let enteringView = new ViewController();
+        enteringView.setPageRef({});
+        enteringView.usePortal = true;
+
+        expect(nav._portal.length()).toBe(0);
+        expect(nav.length()).toBe(0);
+        nav.present(enteringView);
+        expect(nav._portal.length()).toBe(1);
+        expect(nav.length()).toBe(0);
+      });
+
+      it('should present in main nav', () => {
+        let enteringView = new ViewController();
+        enteringView.setPageRef({});
+        enteringView.usePortal = false;
+
+        expect(nav._portal.length()).toBe(0);
+        expect(nav.length()).toBe(0);
+        nav.present(enteringView);
+        expect(nav._portal.length()).toBe(0);
+        expect(nav.length()).toBe(1);
+      });
+
+    });
+
     it('should getActive()', () => {
       expect(nav.getActive()).toBe(null);
       let view1 = new ViewController(Page1);
@@ -1236,6 +1339,8 @@ export function run() {
         setElementClass: function(){},
         setElementStyle: function(){}
       };
+
+      nav._portal = new NavController(null, null, config, null, elementRef, null, null, null, null, null);
 
       return nav;
     }

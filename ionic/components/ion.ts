@@ -1,6 +1,6 @@
 import * as dom from '../util/dom';
 
-let ids:number = 0;
+let ids: number = 0;
 
 /**
  * Base class for all Ionic components. Exposes some common functionality
