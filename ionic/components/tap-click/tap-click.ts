@@ -1,4 +1,4 @@
-import {Injectable, NgZone} from 'angular2/core';
+import {autoinject} from 'aurelia-framework';
 
 import {IonicApp} from '../app/app';
 import {Config} from '../../config/config';
@@ -10,7 +10,7 @@ import {RippleActivator} from './ripple';
 /**
  * @private
  */
-@Injectable()
+@autoinject
 export class TapClick {
   private lastTouch: number = 0;
   private disableClick: number = 0;
@@ -22,30 +22,27 @@ export class TapClick {
 
   constructor(
     config: Config,
-    private app: IonicApp,
-    private zone: NgZone
+    private app: IonicApp
   ) {
     let self = this;
 
     if (config.get('activator') === 'ripple') {
-      self.activator = new RippleActivator(app, config, zone);
+      self.activator = new RippleActivator(app, config);
 
     } else if (config.get('activator') === 'highlight') {
-      self.activator = new Activator(app, config, zone);
+      self.activator = new Activator(app, config);
     }
 
     self.usePolyfill = (config.get('tapPolyfill') === true);
 
-    zone.runOutsideAngular(() => {
-      addListener('click', self.click.bind(self), true);
+    addListener('click', self.click.bind(self), true);
 
-      addListener('touchstart', self.touchStart.bind(self));
-      addListener('touchend', self.touchEnd.bind(self));
-      addListener('touchcancel', self.pointerCancel.bind(self));
+    addListener('touchstart', self.touchStart.bind(self));
+    addListener('touchend', self.touchEnd.bind(self));
+    addListener('touchcancel', self.pointerCancel.bind(self));
 
-      addListener('mousedown', self.mouseDown.bind(self), true);
-      addListener('mouseup', self.mouseUp.bind(self), true);
-    });
+    addListener('mousedown', self.mouseDown.bind(self), true);
+    addListener('mouseup', self.mouseUp.bind(self), true);
 
 
     self.pointerMove = function(ev) {

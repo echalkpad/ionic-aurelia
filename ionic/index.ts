@@ -45,7 +45,7 @@ export function configure(pluginConfig, callback) {
     'label'
   ];
 
-  pluginConfig.globalResources(ENABLED_COMPONENTS.map(name => `ionic-aurelia/components/${name}/${name}`);
+  pluginConfig.globalResources(ENABLED_COMPONENTS.map(name => `ionic-aurelia/components/${name}/${name}`));
 
   providers.forEach(function(provider) {
     pluginConfig.container.registerInstance(provider.constructor, provider);

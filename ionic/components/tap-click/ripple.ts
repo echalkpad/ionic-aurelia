@@ -8,8 +8,8 @@ const win: any = window;
  */
 export class RippleActivator extends Activator {
 
-  constructor(app, config, zone) {
-    super(app, config, zone);
+  constructor(app, config) {
+    super(app, config);
   }
 
   downAction(ev, activatableEle, pointerX, pointerY) {
@@ -119,4 +119,3 @@ export class RippleActivator extends Activator {
 }
 
 const TOUCH_DOWN_ACCEL = 300;
-

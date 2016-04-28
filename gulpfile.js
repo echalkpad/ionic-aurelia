@@ -71,6 +71,7 @@ function getBabelOptions() {
 
 var tscReporter = {
   error: function (error) {
+    console.error(error)
     // TODO
     // suppress type errors until we convert everything to TS
     // console.error(error.message);
@@ -80,17 +81,11 @@ var tscReporter = {
 // We use Babel to easily create named System.register modules
 // See: https://github.com/Microsoft/TypeScript/issues/4801
 // and https://github.com/ivogabe/gulp-typescript/issues/211
-var babelOptions = {
-  moduleIds: true,
-  plugins: [
-    'syntax-flow',
-    'transform-decorators-legacy',
-    'transform-es2015-modules-systemjs'
-  ],
+var babelOptions = Object.assign(getBabelOptions(), {
   getModuleId: function(name) {
-    return 'ionic-aurelia/' + name;
+    return 'ionic-aurelia' + name;
   }
-}
+});
 
 /**
  * Builds Ionic sources to dist. When the '--typecheck' flag is specified,
