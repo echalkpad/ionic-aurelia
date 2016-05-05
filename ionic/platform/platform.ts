@@ -1,4 +1,4 @@
-import {EventEmitter, NgZone} from 'angular2/core';
+//import {EventEmitter, NgZone} from 'angular2/core';
 
 import {Config} from '../config/config';
 import {getQuerystring} from '../util/util';
@@ -51,9 +51,9 @@ export class Platform {
   /**
    * @private
    */
-  setZone(zone: NgZone) {
-    this._zone = zone;
-  }
+  // setZone(zone: NgZone) {
+  //   this._zone = zone;
+  // }
 
 
   // Methods
@@ -211,9 +211,9 @@ export class Platform {
    * such as Cordova or Electron, then it uses the default DOM ready.
    */
   triggerReady(readySource: string) {
-    this._zone.run(() => {
-      this._readyResolve(readySource);
-    });
+    // this._zone.run(() => {
+    this._readyResolve(readySource);
+    // });
   }
 
   /**
@@ -320,7 +320,7 @@ export class Platform {
   * app's back button within the navbar is clicked, but this event is only
   * referencing the platform's hardward back button.
   */
-  backButton: EventEmitter<any> = new EventEmitter();
+  // backButton: EventEmitter<any> = new EventEmitter();
 
   /**
   * The pause event emits when the native platform puts the application
@@ -328,14 +328,14 @@ export class Platform {
   * application. This event would emit when a Cordova app is put into
   * the background, however, it would not fire on a standard web browser.
   */
-  pause: EventEmitter<any> = new EventEmitter();
+  // pause: EventEmitter<any> = new EventEmitter();
 
   /**
   * The resume event emits when the native platform pulls the application
   * out from the background. This event would emit when a Cordova app comes
   * out from the background, however, it would not fire on a standard web browser.
   */
-  resume: EventEmitter<any> = new EventEmitter();
+  // resume: EventEmitter<any> = new EventEmitter();
 
 
   // Getter/Setter Methods
